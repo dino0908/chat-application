@@ -23,7 +23,7 @@ export const registerUser = async (data: AuthFormType) => {
   });
 
   if (!response.ok) {
-    throw new Error("Login failed. Please check your credentials.");
+    throw new Error("Registration failed. Unexpected server error.");
   }
 
   return response.json();

@@ -20,15 +20,28 @@ import {
   Container,
   AppBar,
   Toolbar,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 
 function Landing() {
   const [activeTab, setActiveTab] = useState<0 | 1>(1);
   const navigate = useNavigate();
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleCloseSnackbar = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string,
+  ) => {
+    if (reason === "clickaway") return;
+    setOpenSnackbar(false);
+  };
 
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<AuthFormType>({
     resolver: zodResolver(activeTab === 0 ? loginSchema : registerSchema),
@@ -45,6 +58,9 @@ function Landing() {
     },
     onError: (error: Error) => {
       console.error("Login Error:", error.message);
+      // logic to display snackbar
+      setErrorMessage(error.message);
+      setOpenSnackbar(true);
     },
   });
 
@@ -54,7 +70,11 @@ function Landing() {
       console.log("Registration Success", data);
       setActiveTab(0); // switch to login tab
     },
-    onError: (error: Error) => console.error("Register Error:", error.message),
+    onError: (error: Error) => {
+      console.error("Registration:", error.message);
+      setErrorMessage(error.message);
+      setOpenSnackbar(true);
+    }, // add logic to display error snackbar
   });
 
   const onSubmit = (data: AuthFormType) => {
@@ -129,7 +149,13 @@ function Landing() {
 
           <Tabs
             value={activeTab}
-            onChange={(_, newValue) => setActiveTab(newValue)}
+            onChange={(_, newValue) => {
+              setActiveTab(newValue);
+              reset();
+              loginMutation.reset();
+              registerMutation.reset();
+              setOpenSnackbar(false);
+            }}
             centered
             sx={{
               mb: 4,
@@ -224,6 +250,21 @@ function Landing() {
           </Box>
         </Box>
       </Container>
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="error"
+          variant="filled"
+          sx={{ width: "100%", borderRadius: "12px" }}
+        >
+          {errorMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
