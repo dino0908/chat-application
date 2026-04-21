@@ -1,8 +1,12 @@
-function App() {
+import { BrowserRouter, Routes, Route } from "react-router"
+import Landing from "./pages/Landing"
+
+export default function App() {
   return (
-    <h1 className="text-red-500">hello World</h1>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
-
-export default App
-
