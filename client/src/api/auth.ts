@@ -22,9 +22,11 @@ export const registerUser = async (data: AuthFormType) => {
     body: JSON.stringify(data),
   });
 
+  const result = await response.json();
+
   if (!response.ok) {
-    throw new Error("Registration failed. Unexpected server error.");
+    throw new Error(result.message || "Something went wrong");
   }
 
-  return response.json();
+  return result;
 };
