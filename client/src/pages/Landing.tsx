@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, registerSchema, type AuthFormType } from "../schema/authSchema";
+import { useMutation } from "@tanstack/react-query";
+import { loginUser } from "../api/auth";
+import { useNavigate } from "react-router";
 
 import {
   Box,
@@ -17,6 +20,7 @@ import {
 
 function Landing() {
   const [activeTab, setActiveTab] = useState<0 | 1>(1);
+  const navigate = useNavigate();
 
   const {
     control,
@@ -28,15 +32,23 @@ function Landing() {
     mode: "onSubmit"
   });
 
-  const onSubmit = async (data: AuthFormType) => {
-    if (activeTab === 0) {
-      console.log("Logging in with:", {
-        email: data.email,
-        password: data.password,
-      });
-    } else {
-      console.log("Registering with:", data);
-    }
+  const mutation = useMutation({
+    mutationFn: loginUser,
+    onSuccess: (data) => {
+      console.log("Success!", data);
+      // Store token, redirect user, etc.
+      navigate("/chat")
+    },
+    onError: (error: Error) => {
+      console.error("Login Error:", error.message);
+    },
+  });
+
+
+
+
+  const onSubmit = (data: AuthFormType) => {
+    mutation.mutate(data); // This triggers the API call
   };
 
   return (
@@ -186,7 +198,7 @@ function Landing() {
                 "&:hover": { bgcolor: "#0077ed" },
               }}
             >
-              {activeTab === 0 ? "Sign In" : "Continue"}
+              {mutation.isPending ? "Signing in..." : (activeTab === 0 ? "Sign In" : "Continue")}
             </Button>
           </Box>
         </Box>
