@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema, registerSchema, type AuthFormType } from "../schema/authSchema";
+import {
+  loginSchema,
+  registerSchema,
+  type AuthFormType,
+} from "../schema/authSchema";
 import { useMutation } from "@tanstack/react-query";
-import { loginUser } from "../api/auth";
+import { loginUser, registerUser } from "../api/auth";
 import { useNavigate } from "react-router";
 
 import {
@@ -29,26 +33,36 @@ function Landing() {
   } = useForm<AuthFormType>({
     resolver: zodResolver(activeTab === 0 ? loginSchema : registerSchema),
     defaultValues: { email: "", password: "", username: "" },
-    mode: "onSubmit"
+    mode: "onSubmit",
   });
 
-  const mutation = useMutation({
+  const loginMutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (data) => {
       console.log("Success!", data);
-      // Store token, redirect user, etc.
-      navigate("/chat")
+      // might need to update zustand auth state (later)
+      navigate("/chat");
     },
     onError: (error: Error) => {
       console.error("Login Error:", error.message);
     },
   });
 
-
-
+  const registerMutation = useMutation({
+    mutationFn: registerUser,
+    onSuccess: (data) => {
+      console.log("Registration Success", data);
+      setActiveTab(0); // switch to login tab
+    },
+    onError: (error: Error) => console.error("Register Error:", error.message),
+  });
 
   const onSubmit = (data: AuthFormType) => {
-    mutation.mutate(data); // This triggers the API call
+    if (activeTab === 0) {
+      loginMutation.mutate(data);
+    } else {
+      registerMutation.mutate(data);
+    }
   };
 
   return (
@@ -187,6 +201,7 @@ function Landing() {
               variant="contained"
               disableElevation
               type="submit"
+              disabled={loginMutation.isPending || registerMutation.isPending}
               sx={{
                 mt: 2,
                 py: 1.5,
@@ -198,7 +213,13 @@ function Landing() {
                 "&:hover": { bgcolor: "#0077ed" },
               }}
             >
-              {mutation.isPending ? "Signing in..." : (activeTab === 0 ? "Sign In" : "Continue")}
+              {activeTab === 0
+                ? loginMutation.isPending
+                  ? "Signing in..."
+                  : "Sign In"
+                : registerMutation.isPending
+                  ? "Creating account..."
+                  : "Continue"}
             </Button>
           </Box>
         </Box>
