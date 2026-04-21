@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, registerSchema, type AuthFormType } from "../schema/authSchema";
+
 import {
   Box,
   Tabs,
@@ -11,15 +15,27 @@ import {
   Toolbar,
 } from "@mui/material";
 
-
 function Landing() {
   const [activeTab, setActiveTab] = useState<0 | 1>(1);
 
-  const handleSubmit = async () => {
-    if (activeTab == 0) {
-      console.log("A"); // Login
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<AuthFormType>({
+    resolver: zodResolver(activeTab === 0 ? loginSchema : registerSchema),
+    defaultValues: { email: "", password: "", username: "" },
+    mode: "onSubmit"
+  });
+
+  const onSubmit = async (data: AuthFormType) => {
+    if (activeTab === 0) {
+      console.log("Logging in with:", {
+        email: data.email,
+        password: data.password,
+      });
     } else {
-      console.log("B"); // Register
+      console.log("Registering with:", data);
     }
   };
 
@@ -108,23 +124,57 @@ function Landing() {
           {/* Form Fields */}
           <Box
             component="form"
+            onSubmit={handleSubmit(onSubmit)}
             sx={{ display: "flex", flexDirection: "column", gap: 2 }}
           >
             {activeTab === 1 && (
-              <TextField fullWidth label="Full Name" variant="outlined" />
+              <Controller
+                name="username"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label="Username"
+                    error={!!errors.username}
+                    helperText={errors.username?.message}
+                  />
+                )}
+              />
             )}
-            <TextField fullWidth label="Email address" variant="outlined" />
-            <TextField
-              fullWidth
-              label="Password"
-              type="password"
-              variant="outlined"
+            <Controller
+              name="email"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label="Email address"
+                  error={!!errors.email}
+                  helperText={errors.email?.message}
+                />
+              )}
+            />
+            <Controller
+              name="password"
+              control={control}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  type="password"
+                  label="Password"
+                  error={!!errors.password}
+                  helperText={errors.password?.message}
+                />
+              )}
             />
 
             <Button
               fullWidth
               variant="contained"
               disableElevation
+              type="submit"
               sx={{
                 mt: 2,
                 py: 1.5,
@@ -135,7 +185,6 @@ function Landing() {
                 fontWeight: 500,
                 "&:hover": { bgcolor: "#0077ed" },
               }}
-              onClick={handleSubmit}
             >
               {activeTab === 0 ? "Sign In" : "Continue"}
             </Button>
