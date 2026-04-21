@@ -1,12 +1,44 @@
 import pool from "../config/db.js";
 import bcrypt from 'bcrypt';
 
-export const login = (req, res) => {
-  //   const { email, password } = req.body;
-  //   console.log("Login Attempt:", { email, password });
+export const login = async (req, res) => {
+    const { email, password } = req.body;
 
-  // For now, just send a success response
-  res.status(200).json({ message: "Login endpoint hit successfully" });
+    try {
+        const result = await pool.query(
+            'SELECT * FROM users WHERE email = $1',
+            [email]
+        );
+
+        const user = result.rows[0];
+
+        if (!user) {
+            return res.status(401).json({ 
+                message: "Invalid email or password" 
+            });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password_hash);
+
+        if (!isMatch) {
+            return res.status(401).json({ 
+                message: "Invalid email or password" 
+            });
+        }
+
+        res.status(200).json({
+            message: "Login successful",
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email
+            }
+        });
+
+    } catch (error) {
+        console.error("Login Error:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
 };
 
 export const register = async (req, res) => {
