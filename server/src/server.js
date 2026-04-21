@@ -8,7 +8,7 @@ app.get('/', (req, res) => {
   res.send('Backend is running!');
 });
 
-
+app.use(express.json())
 app.use('/api', routes)
 
 
