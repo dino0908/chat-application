@@ -7,7 +7,6 @@ import {
   IconButton,
   InputBase,
   Avatar,
-  Badge,
   List,
   ListItemButton,
   ListItemAvatar,
@@ -21,13 +20,14 @@ import {
   Chip,
 } from "@mui/material"
 import { createTheme, ThemeProvider } from "@mui/material/styles"
-import SearchIcon from "@mui/icons-material/Search"
 import AddIcon from "@mui/icons-material/Add"
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined"
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined"
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined"
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined"
 import CloseIcon from "@mui/icons-material/Close"
+import SearchBox from "../components/SearchBox"
+import OnlineBadge from "../components/OnlineBadge"
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 const theme = createTheme({
@@ -88,52 +88,6 @@ const avatarColor = (name: string) => {
 
 const initials = (name: string) => name.split(" ").map((n) => n[0]).join("")
 
-function OnlineBadge({ online, children }: { online: boolean; children: React.ReactNode }) {
-  return (
-    <Badge
-      overlap="circular"
-      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      variant="dot"
-      sx={{
-        "& .MuiBadge-dot": {
-          backgroundColor: online ? "#4ade80" : "transparent",
-          border: online ? "2px solid #fff" : "none",
-          width: 10, height: 10, borderRadius: "50%",
-          boxShadow: "none",
-        },
-      }}
-    >
-      {children}
-    </Badge>
-  )
-}
-
-function SearchBox({ value, onChange, placeholder, autoFocus = false }: {
-  value: string; onChange: (v: string) => void; placeholder: string; autoFocus?: boolean
-}) {
-  return (
-    <Paper
-      elevation={0}
-      sx={{
-        display: "flex", alignItems: "center", gap: 1,
-        bgcolor: "#f4f3f1", borderRadius: "8px", px: 1.25,
-        border: "1px solid transparent",
-        "&:focus-within": { borderColor: "#c8c7c2" },
-        transition: "border-color 0.15s",
-      }}
-    >
-      <SearchIcon sx={{ fontSize: 15, color: "#a0a09b", flexShrink: 0 }} />
-      <InputBase
-        autoFocus={autoFocus}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        fullWidth
-        sx={{ fontSize: "13.5px", "& input": { py: "8px", px: 0 } }}
-      />
-    </Paper>
-  )
-}
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
@@ -361,10 +315,6 @@ export default function Chat() {
         <Dialog
           open={newChatOpen}
           onClose={closeNewChat}
-          PaperProps={{
-            elevation: 4,
-            sx: { borderRadius: "14px", width: 360, overflow: "hidden" },
-          }}
         >
           <DialogTitle
             sx={{
@@ -435,7 +385,6 @@ export default function Chat() {
             </Box>
           </DialogContent>
         </Dialog>
-
       </Box>
     </ThemeProvider>
   )
