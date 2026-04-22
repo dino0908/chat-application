@@ -110,3 +110,28 @@ export const getUsers = async (req, res) => {
     });
   }
 };
+
+
+
+export const verifyJWT = async (req, res) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.status(401).json({ isLoggedIn: false });
+  }
+
+  try {
+    const verified = jwt.verify(token, process.env.JWT_SECRET_KEY);
+
+    console.log(verified)
+
+    res.status(200).json({ 
+      id: verified.id,
+      username: verified.username,
+      email: verified.email,
+    });
+
+  } catch (err) {
+    res.status(401).json({ isLoggedIn: false });
+  }
+};

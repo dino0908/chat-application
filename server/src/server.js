@@ -1,6 +1,7 @@
 import routes from "./routes/routes.js"
 import cors from 'cors';
 import express from 'express';
+import cookieParser from 'cookie-parser';
 
 const app = express();       
 const PORT = 5000;          
@@ -13,6 +14,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use(cookieParser());
 
 app.get('/', (req, res) => {
   res.send('Backend is running!');
