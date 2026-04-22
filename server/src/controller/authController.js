@@ -211,3 +211,28 @@ ORDER BY lm.created_at DESC;`;
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+
+
+export const getMessages = async (req, res) => {
+  const { chatId } = req.params;
+  const userId = req.user.id; // From verifyToken middleware
+
+  const query = `
+    SELECT 
+      id, 
+      message_text AS text, 
+      created_at AS time, 
+      (sender_id = $2) AS self
+    FROM messages 
+    WHERE conversation_id = $1 
+    ORDER BY created_at ASC;
+  `;
+
+  try {
+    const result = await pool.query(query, [chatId, userId]);
+    res.status(200).json({ success: true, data: result.rows });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching messages" });
+  }
+};

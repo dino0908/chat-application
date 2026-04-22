@@ -28,31 +28,32 @@ import { useAuthStore } from "../store/useAuthStore";
 import { useUsers } from "../hooks/useUsers";
 import { useChats } from "../hooks/useChats";
 import { formatTime } from "../utils/dateFormatter";
+import { useMessages } from "../hooks/useMessages";
 
-const mockMessages = [
-  {
-    id: 1,
-    text: "hey, you free this afternoon?",
-    time: "2:10 PM",
-    self: false,
-  },
-  { id: 2, text: "yeah what's up?", time: "2:11 PM", self: true },
-  {
-    id: 3,
-    text: "wanted to go over the project timeline, it's getting tight",
-    time: "2:12 PM",
-    self: false,
-  },
-  {
-    id: 4,
-    text: "agreed, let's do a call around 3?",
-    time: "2:13 PM",
-    self: true,
-  },
-  { id: 5, text: "perfect. I'll send a link", time: "2:13 PM", self: false },
-  { id: 6, text: "great 👍", time: "2:14 PM", self: true },
-  { id: 7, text: "sounds good, see you then", time: "2:15 PM", self: false },
-];
+// const mockMessages = [
+//   {
+//     id: 1,
+//     text: "hey, you free this afternoon?",
+//     time: "2:10 PM",
+//     self: false,
+//   },
+//   { id: 2, text: "yeah what's up?", time: "2:11 PM", self: true },
+//   {
+//     id: 3,
+//     text: "wanted to go over the project timeline, it's getting tight",
+//     time: "2:12 PM",
+//     self: false,
+//   },
+//   {
+//     id: 4,
+//     text: "agreed, let's do a call around 3?",
+//     time: "2:13 PM",
+//     self: true,
+//   },
+//   { id: 5, text: "perfect. I'll send a link", time: "2:13 PM", self: false },
+//   { id: 6, text: "great 👍", time: "2:14 PM", self: true },
+//   { id: 7, text: "sounds good, see you then", time: "2:15 PM", self: false },
+// ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const avatarColor = (name: string) => {
@@ -76,10 +77,12 @@ const initials = (name: string) =>
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
+
   const { data: suggestedUsers } = useUsers();
   const { data: allChats } = useChats()
   const { user } = useAuthStore();
-  const { chatId } = useParams<{ chatId: string }>();
+  const { chatId } = useParams<{ chatId: string }>(); // id the client is chatting with, taken from the URL
+  const { data: messages } = useMessages(chatId);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -343,7 +346,7 @@ export default function Chat() {
                 gap: 1.25,
               }}
             >
-              {mockMessages.map((msg) => (
+              {messages?.map((msg: any) => (
                 <Box
                   key={msg.id}
                   sx={{
