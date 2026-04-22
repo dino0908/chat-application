@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Typography,
   Box,
@@ -155,18 +155,13 @@ const initials = (name: string) =>
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
-  const { user, checkAuth } = useAuthStore();
+  const { user } = useAuthStore();
   const [activeChat, setActiveChat] = useState(mockChats[0]);
   const [searchQuery, setSearchQuery] = useState("");
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatSearch, setNewChatSearch] = useState("");
   const [messageInput, setMessageInput] = useState("");
 
-  useEffect(() => {
-    console.log("Checking auth in useeffect")
-    checkAuth()
-  }, [])
-  
   const closeNewChat = () => {
     setNewChatOpen(false);
     setNewChatSearch("");
