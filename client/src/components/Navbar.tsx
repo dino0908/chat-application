@@ -30,10 +30,17 @@ function Navbar() {
         }}
       >
         <Typography
+          onClick={() => navigate("/chat")}
           sx={{
             fontWeight: 600,
             fontSize: "17px",
             letterSpacing: "-0.3px",
+            cursor: "pointer", // Makes it look clickable
+            color: "inherit", // Keeps the AppBar text color (usually white)
+            userSelect: "none", // Prevents text highlighting on click
+            "&:hover": {
+              opacity: 0.8, // Optional: subtle feedback
+            },
           }}
         >
           chatapp

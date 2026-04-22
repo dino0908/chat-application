@@ -17,7 +17,7 @@ import {
   Tooltip,
   Chip,
 } from "@mui/material";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import AddIcon from "@mui/icons-material/Add";
 import Navbar from "../components/Navbar";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
@@ -25,30 +25,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import SearchBox from "../components/SearchBox";
 import OnlineBadge from "../components/OnlineBadge";
 import { useAuthStore } from "../store/useAuthStore";
-
-// ─── Theme ────────────────────────────────────────────────────────────────────
-const theme = createTheme({
-  palette: {
-    background: { default: "#f8f8f7", paper: "#ffffff" },
-    text: { primary: "#1a1a18", secondary: "#8a8a86" },
-    divider: "#ebebea",
-    primary: { main: "#1a1a18", contrastText: "#f8f8f7" },
-  },
-  typography: { fontFamily: "'DM Sans', sans-serif" },
-  shape: { borderRadius: 10 },
-  components: {
-    MuiAppBar: {
-      styleOverrides: {
-        root: {
-          backgroundColor: "#ffffff",
-          color: "#1a1a18",
-          boxShadow: "none",
-          borderBottom: "1px solid #ebebea",
-        },
-      },
-    },
-  },
-});
+import { theme } from "../utils/theme"
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 const mockChats = [
