@@ -123,8 +123,6 @@ export const verifyJWT = async (req, res) => {
   try {
     const verified = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
-    console.log(verified)
-
     res.status(200).json({ 
       id: verified.id,
       username: verified.username,
