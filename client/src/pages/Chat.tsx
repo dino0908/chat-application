@@ -104,13 +104,6 @@ const mockMessages = [
   { id: 7, text: "sounds good, see you then", time: "2:15 PM", self: false },
 ];
 
-// const suggestedUsers = [
-//   { id: 1, name: "Taylor Swift", username: "@tswift" },
-//   { id: 2, name: "Morgan Freeman", username: "@mfreeman" },
-//   { id: 3, name: "Dana White", username: "@dwhite" },
-//   { id: 4, name: "Priya Patel", username: "@ppatel" },
-// ];
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const avatarColor = (name: string) => {
   const colors = [
@@ -130,15 +123,10 @@ const initials = (name: string) =>
     .map((n) => n[0])
     .join("");
 
-// interface ActiveChatType {
-//   id: number;
-//   name: string;
-//   online: boolean;
-// }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
-  const { data: suggestedUsers, isLoading, isError } = useUsers();
+  const { data: suggestedUsers } = useUsers();
   const { user } = useAuthStore();
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();

@@ -32,11 +32,11 @@ export const login = async (req, res) => {
       { expiresIn: "7d" },
     );
 
-    res.cookie('token', token, {
-      httpOnly: true,         // Prevents JS access (XSS protection)
-    //   secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in prod
-      sameSite: 'strict',     // CSRF protection
-      maxAge: 3600000
+    res.cookie("token", token, {
+      httpOnly: true, // Prevents JS access (XSS protection)
+      //   secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in prod
+      sameSite: "strict", // CSRF protection
+      maxAge: 3600000,
     });
 
     res.status(200).json({
@@ -111,8 +111,6 @@ export const getUsers = async (req, res) => {
   }
 };
 
-
-
 export const verifyJWT = async (req, res) => {
   const token = req.cookies.token;
 
@@ -123,18 +121,33 @@ export const verifyJWT = async (req, res) => {
   try {
     const verified = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
-    res.status(200).json({ 
+    res.status(200).json({
       id: verified.id,
       username: verified.username,
       email: verified.email,
     });
-
   } catch (err) {
     res.status(401).json({ isLoggedIn: false });
   }
 };
 
+// middleware
+export const verifyToken = (req, res, next) => {
+  const token = req.cookies.token;
 
+  if (!token) {
+    return res.status(401).json({ success: false, message: "Not authenticated" });
+  }
+
+  try {
+    const verified = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    // Attach the user info to the request object
+    req.user = verified; 
+    next();
+  } catch (err) {
+    return res.status(403).json({ success: false, message: "Token is not valid" });
+  }
+};
 
 export const logout = async (req, res) => {
   res.clearCookie("token", {
@@ -145,4 +158,55 @@ export const logout = async (req, res) => {
   });
 
   return res.status(200).json({ message: "Logged out successfully" });
+};
+
+// get the chats the user is in, to display on the left side of the chats page
+export const getChats = async (req, res) => {
+  const userId = req.user?.id  // The middleware should have attached the user to the request object
+
+  if (!userId) {
+    return res.status(401).json({ success: false, message: "Not authorized" });
+  }
+
+  const query = `
+  SELECT 
+    c.id AS conversation_id,
+    u.username AS name,
+    u.is_online AS online,
+    lm.message_text AS "lastMessage",
+    lm.created_at AS time,
+    (
+        SELECT COUNT(*)::INT 
+        FROM messages 
+        WHERE conversation_id = c.id 
+          AND sender_id != $1  -- $1 is the Logged-in User's ID
+          AND is_read = FALSE
+    ) AS unread
+FROM conversations c
+-- 1. Find conversations where the current user is a participant
+JOIN conversation_participants cp1 ON c.id = cp1.conversation_id AND cp1.user_id = $1
+-- 2. Find the "other" participant in those same conversations
+JOIN conversation_participants cp2 ON c.id = cp2.conversation_id AND cp2.user_id != $1
+-- 3. Get the "other" participant's profile info
+JOIN users u ON cp2.user_id = u.id
+-- 4. Get only the single latest message for the preview
+LEFT JOIN LATERAL (
+    SELECT message_text, created_at 
+    FROM messages 
+    WHERE conversation_id = c.id 
+    ORDER BY created_at DESC 
+    LIMIT 1
+) lm ON true
+ORDER BY lm.created_at DESC;`;
+
+  try {
+    const result = await pool.query(query, [userId]);
+    res.status(200).json({
+      success: true,
+      data: result.rows,
+    });
+  } catch (error) {
+    console.error("Error fetching chats:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
 };
