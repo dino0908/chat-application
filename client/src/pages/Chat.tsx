@@ -27,6 +27,7 @@ import OnlineBadge from "../components/OnlineBadge";
 import { useAuthStore } from "../store/useAuthStore";
 import { useUsers } from "../hooks/useUsers";
 import { useChats } from "../hooks/useChats";
+import { formatTime } from "../utils/dateFormatter";
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 // const mockChats = [
@@ -223,8 +224,8 @@ export default function Chat() {
           <List disablePadding sx={{ flex: 1, overflowY: "auto", pb: 1 }}>
             {filteredChats?.map((chat: any) => (
               <ListItemButton
-                key={chat.id}
-                selected={activeChat?.id === chat.id}
+                key={chat.conversation_id}
+                selected={activeChat?.id === chat.conversation_id}
                 onClick={() => navigate(`/chat/${chat.id}`)}
                 sx={{
                   px: 1.75,
@@ -282,7 +283,7 @@ export default function Chat() {
                           ml: 0.75,
                         }}
                       >
-                        {chat.time}
+                        {formatTime(chat.time)}
                       </Typography>
                     </Box>
                   }
@@ -300,7 +301,7 @@ export default function Chat() {
                         sx={{
                           fontSize: "12.5px",
                           color: "#8a8a86",
-                          maxWidth: "150px",
+                          maxWidth: "250px",
                         }}
                       >
                         {chat.lastMessage}
