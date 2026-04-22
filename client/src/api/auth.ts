@@ -1,32 +1,41 @@
 import { type AuthFormType } from "../schema/authSchema";
+import axios from "axios";
 
 export const loginUser = async (data: AuthFormType) => {
-  const response = await fetch("http://localhost:5000/api/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+  try {
+    const response = await axios.post("http://localhost:5000/api/login", data, {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-  if (!response.ok) {
-    throw new Error("Login failed. Please check your credentials.");
+    return response.data;
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.message ||
+      "Login failed. Please check your credentials.";
+    throw new Error(errorMessage);
   }
-
-  return response.json();
 };
 
-
 export const registerUser = async (data: AuthFormType) => {
-  const response = await fetch("http://localhost:5000/api/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
+  try {
+    const response = await axios.post(
+      "http://localhost:5000/api/register",
+      data,
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    return response.data;
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.message || "Registration failed. Please try again.";
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Something went wrong");
+    throw new Error(errorMessage);
   }
-
-  return result;
 };
