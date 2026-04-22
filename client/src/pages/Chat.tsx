@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  AppBar,
-  Toolbar,
   Typography,
   Box,
   IconButton,
@@ -21,9 +19,7 @@ import {
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import AddIcon from "@mui/icons-material/Add";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
-import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
+import Navbar from "../components/Navbar";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchBox from "../components/SearchBox";
@@ -190,7 +186,7 @@ export default function Chat() {
   return (
     <ThemeProvider theme={theme}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');`}</style>
-
+      
       <Box
         sx={{
           height: "100vh",
@@ -199,68 +195,7 @@ export default function Chat() {
           bgcolor: "background.default",
         }}
       >
-        {/* ── Navbar ──────────────────────────────────────────────────────── */}
-        <AppBar position="static" elevation={0}>
-          <Toolbar
-            sx={{
-              minHeight: "56px !important",
-              px: 3,
-              justifyContent: "space-between",
-            }}
-          >
-            <Typography
-              sx={{
-                fontWeight: 600,
-                fontSize: "17px",
-                letterSpacing: "-0.3px",
-              }}
-            >
-              chatapp
-            </Typography>
-
-            <Box sx={{ display: "flex", gap: 0.5 }}>
-              {[
-                {
-                  label: "Settings",
-                  icon: <SettingsOutlinedIcon sx={{ fontSize: 18 }} />,
-                },
-                {
-                  label: "Profile",
-                  icon: <PersonOutlineOutlinedIcon sx={{ fontSize: 18 }} />,
-                },
-                {
-                  label: "Log out",
-                  icon: <LogoutOutlinedIcon sx={{ fontSize: 18 }} />,
-                },
-              ].map(({ label, icon }) => (
-                <Box
-                  key={label}
-                  component="button"
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    px: 1.5,
-                    py: 0.875,
-                    borderRadius: "8px",
-                    border: "none",
-                    background: "none",
-                    cursor: "pointer",
-                    color: "#6b6b67",
-                    fontSize: "13.5px",
-                    fontFamily: "inherit",
-                    transition: "background 0.15s",
-                    "&:hover": { bgcolor: "#ebebea" },
-                  }}
-                >
-                  {icon}
-                  <span>{label}</span>
-                </Box>
-              ))}
-            </Box>
-          </Toolbar>
-        </AppBar>
-
+        <Navbar />
         {/* ── Body ────────────────────────────────────────────────────────── */}
         <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
           {/* ── Left 30% ────────────────────────────────────────────────── */}

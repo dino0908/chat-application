@@ -133,3 +133,16 @@ export const verifyJWT = async (req, res) => {
     res.status(401).json({ isLoggedIn: false });
   }
 };
+
+
+
+export const logout = async (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    // secure: process.env.NODE_ENV === "production", // same settings as when you set it
+    sameSite: "strict",
+    path: "/", // Ensure this matches the path used when the cookie was created
+  });
+
+  return res.status(200).json({ message: "Logged out successfully" });
+};

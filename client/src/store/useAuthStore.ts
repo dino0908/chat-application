@@ -15,10 +15,23 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isCheckingAuth: true,
-
   setAuth: (userData) => set({ user: userData }),
 
-  logout: () => set({ user: null }),
+  logout: async () => {
+    try {
+      // 1. Call the backend to clear the cookie
+      await axios.get(
+        "http://localhost:5000/api/logout",
+        {
+          withCredentials: true,
+        },
+      );
+
+      set({ user: null });
+    } catch (error) {
+      set({ user: null });
+    }
+  },
 
   checkAuth: async () => {
     set({ isCheckingAuth: true });
