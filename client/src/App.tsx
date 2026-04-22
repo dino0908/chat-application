@@ -6,6 +6,8 @@ import Profile from "./pages/Profile";
 import ProtectedRoute from "./routing/ProtectedRoute";
 import { useAuthStore } from "./store/useAuthStore";
 import { useEffect } from "react";
+import { ThemeProvider } from "@mui/material/styles";
+import { theme } from "./utils/theme"
 
 export default function App() {
   const { checkAuth } = useAuthStore();
@@ -14,6 +16,8 @@ export default function App() {
   }, []);
 
   return (
+    <ThemeProvider theme={theme}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');`}</style>
     <BrowserRouter>
       <Routes>
         {/* Public Routes */}
@@ -27,5 +31,6 @@ export default function App() {
         </Route>
       </Routes>
     </BrowserRouter>
+    </ThemeProvider>
   );
 }
