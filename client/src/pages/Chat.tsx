@@ -522,7 +522,7 @@ export default function Chat() {
       </Box>
 
       {/* ── New Chat Dialog ──────────────────────────────────────────────── */}
-      <Dialog open={newChatOpen} onClose={closeNewChat}>
+      <Dialog open={newChatOpen} onClose={closeNewChat} fullWidth maxWidth="sm">
         <DialogTitle
           sx={{
             display: "flex",
