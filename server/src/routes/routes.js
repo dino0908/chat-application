@@ -7,7 +7,7 @@ router.post('/login', login)
 router.post('/register', register)
 router.get('/users', getUsers)
 router.get('/me', verifyJWT)
-router.post('/logout', logout)
+router.get('/logout', logout)
 
 
 
