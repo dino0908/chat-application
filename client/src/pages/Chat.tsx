@@ -29,58 +29,6 @@ import { useUsers } from "../hooks/useUsers";
 import { useChats } from "../hooks/useChats";
 import { formatTime } from "../utils/dateFormatter";
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-// const mockChats = [
-//   {
-//     id: 1,
-//     username: "Alex Morgan",
-//     lastMessage: "sounds good, see you then",
-//     time: "2m",
-//     unread: 2,
-//     online: true,
-//   },
-//   {
-//     id: 2,
-//     username: "Jamie Lee",
-//     lastMessage: "can you send the file?",
-//     time: "14m",
-//     unread: 0,
-//     online: true,
-//   },
-//   {
-//     id: 3,
-//     username: "Sam Rivera",
-//     lastMessage: "haha yeah exactly",
-//     time: "1h",
-//     unread: 0,
-//     online: false,
-//   },
-//   {
-//     id: 4,
-//     username: "Casey Kim",
-//     lastMessage: "thanks!",
-//     time: "3h",
-//     unread: 1,
-//     online: false,
-//   },
-//   {
-//     id: 5,
-//     username: "Jordan Blake",
-//     lastMessage: "let me check and get back",
-//     time: "yesterday",
-//     unread: 0,
-//     online: true,
-//   },
-//   {
-//     id: 6,
-//     username: "Riley Chen",
-//     lastMessage: "ok cool",
-//     time: "yesterday",
-//     unread: 0,
-//     online: false,
-//   },
-// ];
-
 const mockMessages = [
   {
     id: 1,
@@ -134,8 +82,6 @@ export default function Chat() {
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
 
-
-
   useEffect(() => {
     console.log(allChats)
   }, [allChats])
@@ -143,6 +89,7 @@ export default function Chat() {
   const activeChat = chatId
     ? allChats?.find((c: any) => c.conversation_id === parseInt(chatId)) || null
     : null;
+    
   const [searchQuery, setSearchQuery] = useState("");
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatSearch, setNewChatSearch] = useState("");
@@ -226,7 +173,7 @@ export default function Chat() {
               <ListItemButton
                 key={chat.conversation_id}
                 selected={activeChat?.id === chat.conversation_id}
-                onClick={() => navigate(`/chat/${chat.id}`)}
+                onClick={() => navigate(`/chat/${chat.conversation_id}`)}
                 sx={{
                   px: 1.75,
                   py: 1.25,
