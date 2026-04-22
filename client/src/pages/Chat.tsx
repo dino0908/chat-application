@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useParams, useNavigate } from "react-router";
 import {
   Typography,
   Box,
@@ -137,7 +138,13 @@ interface ActiveChatType {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
   const { user } = useAuthStore();
-  const [activeChat, setActiveChat] = useState<ActiveChatType | null>(null);
+  const { chatId } = useParams<{ chatId: string }>();
+  const navigate = useNavigate();
+
+  // Find activeChat based on URL parameter
+  const activeChat = chatId
+    ? mockChats.find((c) => c.id === parseInt(chatId)) || null
+    : null;
   const [searchQuery, setSearchQuery] = useState("");
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatSearch, setNewChatSearch] = useState("");
@@ -222,7 +229,7 @@ export default function Chat() {
               <ListItemButton
                 key={chat.id}
                 selected={activeChat?.id === chat.id}
-                onClick={() => setActiveChat(chat)}
+                onClick={() => navigate(`/chat/${chat.id}`)}
                 sx={{
                   px: 1.75,
                   py: 1.25,
@@ -580,7 +587,10 @@ export default function Chat() {
                 {filteredUsers.map((user) => (
                   <ListItem key={user.id} disablePadding>
                     <ListItemButton
-                      onClick={closeNewChat}
+                      onClick={() => {
+                        closeNewChat();
+                        navigate(`/chat/${user.id}`);
+                      }}
                       sx={{
                         borderRadius: "8px",
                         px: 1.25,
