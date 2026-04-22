@@ -25,12 +25,13 @@ import CloseIcon from "@mui/icons-material/Close";
 import SearchBox from "../components/SearchBox";
 import OnlineBadge from "../components/OnlineBadge";
 import { useAuthStore } from "../store/useAuthStore";
+import { useUsers } from "../hooks/useUsers";
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 const mockChats = [
   {
     id: 1,
-    name: "Alex Morgan",
+    username: "Alex Morgan",
     lastMessage: "sounds good, see you then",
     time: "2m",
     unread: 2,
@@ -38,7 +39,7 @@ const mockChats = [
   },
   {
     id: 2,
-    name: "Jamie Lee",
+    username: "Jamie Lee",
     lastMessage: "can you send the file?",
     time: "14m",
     unread: 0,
@@ -46,7 +47,7 @@ const mockChats = [
   },
   {
     id: 3,
-    name: "Sam Rivera",
+    username: "Sam Rivera",
     lastMessage: "haha yeah exactly",
     time: "1h",
     unread: 0,
@@ -54,7 +55,7 @@ const mockChats = [
   },
   {
     id: 4,
-    name: "Casey Kim",
+    username: "Casey Kim",
     lastMessage: "thanks!",
     time: "3h",
     unread: 1,
@@ -62,7 +63,7 @@ const mockChats = [
   },
   {
     id: 5,
-    name: "Jordan Blake",
+    username: "Jordan Blake",
     lastMessage: "let me check and get back",
     time: "yesterday",
     unread: 0,
@@ -70,7 +71,7 @@ const mockChats = [
   },
   {
     id: 6,
-    name: "Riley Chen",
+    username: "Riley Chen",
     lastMessage: "ok cool",
     time: "yesterday",
     unread: 0,
@@ -103,12 +104,12 @@ const mockMessages = [
   { id: 7, text: "sounds good, see you then", time: "2:15 PM", self: false },
 ];
 
-const suggestedUsers = [
-  { id: 1, name: "Taylor Swift", username: "@tswift" },
-  { id: 2, name: "Morgan Freeman", username: "@mfreeman" },
-  { id: 3, name: "Dana White", username: "@dwhite" },
-  { id: 4, name: "Priya Patel", username: "@ppatel" },
-];
+// const suggestedUsers = [
+//   { id: 1, name: "Taylor Swift", username: "@tswift" },
+//   { id: 2, name: "Morgan Freeman", username: "@mfreeman" },
+//   { id: 3, name: "Dana White", username: "@dwhite" },
+//   { id: 4, name: "Priya Patel", username: "@ppatel" },
+// ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const avatarColor = (name: string) => {
@@ -129,14 +130,15 @@ const initials = (name: string) =>
     .map((n) => n[0])
     .join("");
 
-interface ActiveChatType {
-  id: number;
-  name: string;
-  online: boolean;
-}
+// interface ActiveChatType {
+//   id: number;
+//   name: string;
+//   online: boolean;
+// }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
+  const { data: suggestedUsers, isLoading, isError } = useUsers();
   const { user } = useAuthStore();
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
@@ -156,14 +158,13 @@ export default function Chat() {
   };
 
   const filteredChats = mockChats.filter((c) =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    c.username.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const filteredUsers = suggestedUsers.filter(
-    (u) =>
+  const filteredUsers = (suggestedUsers || []).filter(
+    (u: any) =>
       newChatSearch.length > 0 &&
-      (u.name.toLowerCase().includes(newChatSearch.toLowerCase()) ||
-        u.username.toLowerCase().includes(newChatSearch.toLowerCase())),
+        u.username.toLowerCase().includes(newChatSearch.toLowerCase()) && u.username !== user?.username // Excludes you from the results,
   );
 
   return (
@@ -247,12 +248,12 @@ export default function Chat() {
                       sx={{
                         width: 36,
                         height: 36,
-                        bgcolor: avatarColor(chat.name),
+                        bgcolor: avatarColor(chat.username),
                         fontSize: "13px",
                         fontWeight: 600,
                       }}
                     >
-                      {initials(chat.name)}
+                      {initials(chat.username)}
                     </Avatar>
                   </OnlineBadge>
                 </ListItemAvatar>
@@ -276,7 +277,7 @@ export default function Chat() {
                           maxWidth: "130px",
                         }}
                       >
-                        {chat.name}
+                        {chat.username}
                       </Typography>
                       <Typography
                         sx={{
@@ -363,19 +364,19 @@ export default function Chat() {
                   sx={{
                     width: 36,
                     height: 36,
-                    bgcolor: avatarColor(activeChat?.name),
+                    bgcolor: avatarColor(activeChat?.username),
                     fontSize: "13px",
                     fontWeight: 600,
                   }}
                 >
-                  {initials(activeChat.name)}
+                  {initials(activeChat.username)}
                 </Avatar>
               </OnlineBadge>
               <Box>
                 <Typography
                   sx={{ fontWeight: 500, fontSize: "14px", color: "#1a1a18" }}
                 >
-                  {activeChat.name}
+                  {activeChat.username}
                 </Typography>
                 <Typography
                   sx={{
@@ -476,7 +477,7 @@ export default function Chat() {
                 <InputBase
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
-                  placeholder={`{Message} ${activeChat.name}…`}
+                  placeholder={`{Message} ${activeChat.username}…`}
                   fullWidth
                   sx={{ fontSize: "13.5px", "& input": { py: "10px" } }}
                 />
@@ -584,7 +585,7 @@ export default function Chat() {
               </Typography>
             ) : (
               <List disablePadding>
-                {filteredUsers.map((user) => (
+                {filteredUsers.map((user: any) => (
                   <ListItem key={user.id} disablePadding>
                     <ListItemButton
                       onClick={() => {
@@ -604,12 +605,12 @@ export default function Chat() {
                           sx={{
                             width: 32,
                             height: 32,
-                            bgcolor: avatarColor(user.name),
+                            bgcolor: avatarColor(user.username),
                             fontSize: "11px",
                             fontWeight: 600,
                           }}
                         >
-                          {initials(user.name)}
+                          {initials(user.username)}
                         </Avatar>
                       </ListItemAvatar>
                       <ListItemText
@@ -622,14 +623,14 @@ export default function Chat() {
                               color: "#1a1a18",
                             }}
                           >
-                            {user.name}
+                            {user.username}
                           </Typography>
                         }
                         secondary={
                           <Typography
                             sx={{ fontSize: "12px", color: "#a0a09b" }}
                           >
-                            {user.username}
+                            {user.email}
                           </Typography>
                         }
                       />
