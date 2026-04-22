@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import {
   Typography,
@@ -26,58 +26,59 @@ import SearchBox from "../components/SearchBox";
 import OnlineBadge from "../components/OnlineBadge";
 import { useAuthStore } from "../store/useAuthStore";
 import { useUsers } from "../hooks/useUsers";
+import { useChats } from "../hooks/useChats";
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
-const mockChats = [
-  {
-    id: 1,
-    username: "Alex Morgan",
-    lastMessage: "sounds good, see you then",
-    time: "2m",
-    unread: 2,
-    online: true,
-  },
-  {
-    id: 2,
-    username: "Jamie Lee",
-    lastMessage: "can you send the file?",
-    time: "14m",
-    unread: 0,
-    online: true,
-  },
-  {
-    id: 3,
-    username: "Sam Rivera",
-    lastMessage: "haha yeah exactly",
-    time: "1h",
-    unread: 0,
-    online: false,
-  },
-  {
-    id: 4,
-    username: "Casey Kim",
-    lastMessage: "thanks!",
-    time: "3h",
-    unread: 1,
-    online: false,
-  },
-  {
-    id: 5,
-    username: "Jordan Blake",
-    lastMessage: "let me check and get back",
-    time: "yesterday",
-    unread: 0,
-    online: true,
-  },
-  {
-    id: 6,
-    username: "Riley Chen",
-    lastMessage: "ok cool",
-    time: "yesterday",
-    unread: 0,
-    online: false,
-  },
-];
+// const mockChats = [
+//   {
+//     id: 1,
+//     username: "Alex Morgan",
+//     lastMessage: "sounds good, see you then",
+//     time: "2m",
+//     unread: 2,
+//     online: true,
+//   },
+//   {
+//     id: 2,
+//     username: "Jamie Lee",
+//     lastMessage: "can you send the file?",
+//     time: "14m",
+//     unread: 0,
+//     online: true,
+//   },
+//   {
+//     id: 3,
+//     username: "Sam Rivera",
+//     lastMessage: "haha yeah exactly",
+//     time: "1h",
+//     unread: 0,
+//     online: false,
+//   },
+//   {
+//     id: 4,
+//     username: "Casey Kim",
+//     lastMessage: "thanks!",
+//     time: "3h",
+//     unread: 1,
+//     online: false,
+//   },
+//   {
+//     id: 5,
+//     username: "Jordan Blake",
+//     lastMessage: "let me check and get back",
+//     time: "yesterday",
+//     unread: 0,
+//     online: true,
+//   },
+//   {
+//     id: 6,
+//     username: "Riley Chen",
+//     lastMessage: "ok cool",
+//     time: "yesterday",
+//     unread: 0,
+//     online: false,
+//   },
+// ];
 
 const mockMessages = [
   {
@@ -127,13 +128,19 @@ const initials = (name: string) =>
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
   const { data: suggestedUsers } = useUsers();
+  const { data: allChats } = useChats()
   const { user } = useAuthStore();
   const { chatId } = useParams<{ chatId: string }>();
   const navigate = useNavigate();
 
-  // Find activeChat based on URL parameter
+
+
+  useEffect(() => {
+    console.log(allChats)
+  }, [allChats])
+
   const activeChat = chatId
-    ? mockChats.find((c) => c.id === parseInt(chatId)) || null
+    ? allChats?.find((c: any) => c.conversation_id === parseInt(chatId)) || null
     : null;
   const [searchQuery, setSearchQuery] = useState("");
   const [newChatOpen, setNewChatOpen] = useState(false);
@@ -145,8 +152,8 @@ export default function Chat() {
     setNewChatSearch("");
   };
 
-  const filteredChats = mockChats.filter((c) =>
-    c.username.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredChats = allChats?.filter((c: any) =>
+    c.username?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const filteredUsers = (suggestedUsers || []).filter(
@@ -214,7 +221,7 @@ export default function Chat() {
 
           {/* Chat list */}
           <List disablePadding sx={{ flex: 1, overflowY: "auto", pb: 1 }}>
-            {filteredChats.map((chat) => (
+            {filteredChats?.map((chat: any) => (
               <ListItemButton
                 key={chat.id}
                 selected={activeChat?.id === chat.id}

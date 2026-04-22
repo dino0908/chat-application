@@ -171,7 +171,7 @@ export const getChats = async (req, res) => {
   const query = `
   SELECT 
     c.id AS conversation_id,
-    u.username AS name,
+    u.username AS username,
     u.is_online AS online,
     lm.message_text AS "lastMessage",
     lm.created_at AS time,
