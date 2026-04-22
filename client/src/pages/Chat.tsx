@@ -28,6 +28,7 @@ import SendOutlinedIcon from "@mui/icons-material/SendOutlined"
 import CloseIcon from "@mui/icons-material/Close"
 import SearchBox from "../components/SearchBox"
 import OnlineBadge from "../components/OnlineBadge"
+import { useAuthStore } from "../store/useAuthStore"
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 const theme = createTheme({
@@ -91,6 +92,7 @@ const initials = (name: string) => name.split(" ").map((n) => n[0]).join("")
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
+  const user = useAuthStore((state) => state.user)
   const [activeChat, setActiveChat]     = useState(mockChats[0])
   const [searchQuery, setSearchQuery]   = useState("")
   const [newChatOpen, setNewChatOpen]   = useState(false)
@@ -103,6 +105,7 @@ export default function Chat() {
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  
   const filteredUsers = suggestedUsers.filter(
     (u) =>
       newChatSearch.length > 0 &&
@@ -289,10 +292,11 @@ export default function Chat() {
                   transition: "border-color 0.15s",
                 }}
               >
+                <h1>{user?.username || "no user"}</h1>
                 <InputBase
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
-                  placeholder={`Message ${activeChat.name}…`}
+                  placeholder={`{Message} ${activeChat.name}…`}
                   fullWidth
                   sx={{ fontSize: "13.5px", "& input": { py: "10px" } }}
                 />

@@ -9,6 +9,7 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { loginUser, registerUser } from "../api/auth";
 import { useNavigate } from "react-router";
+import { useAuthStore } from "../store/useAuthStore";
 
 import {
   Box,
@@ -25,13 +26,14 @@ import {
 } from "@mui/material";
 
 function Landing() {
+  const setAuth = useAuthStore((state) => state.setAuth)
   const [activeTab, setActiveTab] = useState<0 | 1>(1);
   const navigate = useNavigate();
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleCloseSnackbar = (
-    event?: React.SyntheticEvent | Event,
+    _?: React.SyntheticEvent | Event,
     reason?: string,
   ) => {
     if (reason === "clickaway") return;
@@ -53,7 +55,7 @@ function Landing() {
     mutationFn: loginUser,
     onSuccess: (data) => {
       console.log("Success!", data);
-      // might need to update zustand auth state (later)
+      setAuth(data.user);
       navigate("/chat");
     },
     onError: (error: Error) => {
