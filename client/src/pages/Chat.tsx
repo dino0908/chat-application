@@ -128,10 +128,16 @@ const initials = (name: string) =>
     .map((n) => n[0])
     .join("");
 
+interface ActiveChatType {
+  id: number;
+  name: string;
+  online: boolean;
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
   const { user } = useAuthStore();
-  const [activeChat, setActiveChat] = useState(mockChats[0]);
+  const [activeChat, setActiveChat] = useState<ActiveChatType | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatSearch, setNewChatSearch] = useState("");
@@ -215,7 +221,7 @@ export default function Chat() {
             {filteredChats.map((chat) => (
               <ListItemButton
                 key={chat.id}
-                selected={activeChat.id === chat.id}
+                selected={activeChat?.id === chat.id}
                 onClick={() => setActiveChat(chat)}
                 sx={{
                   px: 1.75,
@@ -322,164 +328,190 @@ export default function Chat() {
         </Box>
 
         {/* ── Right 70% ───────────────────────────────────────────────── */}
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            bgcolor: "background.default",
-          }}
-        >
-          {/* Chat header */}
-          <Box
-            sx={{
-              bgcolor: "background.paper",
-              borderBottom: "1px solid",
-              borderColor: "divider",
-              px: 3,
-              py: 1.5,
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
-              flexShrink: 0,
-            }}
-          >
-            <OnlineBadge online={activeChat.online}>
-              <Avatar
-                sx={{
-                  width: 36,
-                  height: 36,
-                  bgcolor: avatarColor(activeChat.name),
-                  fontSize: "13px",
-                  fontWeight: 600,
-                }}
-              >
-                {initials(activeChat.name)}
-              </Avatar>
-            </OnlineBadge>
-            <Box>
-              <Typography
-                sx={{ fontWeight: 500, fontSize: "14px", color: "#1a1a18" }}
-              >
-                {activeChat.name}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "12px",
-                  color: activeChat.online ? "#4ade80" : "#a0a09b",
-                }}
-              >
-                {activeChat.online ? "online" : "offline"}
-              </Typography>
-            </Box>
-          </Box>
-
-          {/* Messages */}
+        {activeChat ? (
           <Box
             sx={{
               flex: 1,
-              overflowY: "auto",
-              p: 3,
               display: "flex",
               flexDirection: "column",
-              gap: 1.25,
+              bgcolor: "background.default",
             }}
           >
-            {mockMessages.map((msg) => (
-              <Box
-                key={msg.id}
-                sx={{
-                  display: "flex",
-                  justifyContent: msg.self ? "flex-end" : "flex-start",
-                }}
-              >
-                <Box
-                  sx={{
-                    maxWidth: "58%",
-                    px: 1.75,
-                    py: 1.25,
-                    borderRadius: msg.self
-                      ? "16px 16px 4px 16px"
-                      : "16px 16px 16px 4px",
-                    bgcolor: msg.self ? "#1a1a18" : "background.paper",
-                    border: msg.self ? "none" : "1px solid #ebebea",
-                    boxShadow: msg.self ? "none" : "0 1px 4px rgba(0,0,0,0.06)",
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontSize: "13.5px",
-                      lineHeight: 1.5,
-                      color: msg.self ? "#f8f8f7" : "#1a1a18",
-                    }}
-                  >
-                    {msg.text}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: "10.5px",
-                      color: msg.self ? "#8a8a86" : "#b0b0ab",
-                      mt: 0.5,
-                      textAlign: "right",
-                    }}
-                  >
-                    {msg.time}
-                  </Typography>
-                </Box>
-              </Box>
-            ))}
-          </Box>
-
-          {/* Message input */}
-          <Box
-            sx={{
-              p: "14px 20px",
-              borderTop: "1px solid",
-              borderColor: "divider",
-              bgcolor: "background.paper",
-              display: "flex",
-              gap: 1.25,
-              alignItems: "center",
-            }}
-          >
-            <Paper
-              elevation={0}
+            {/* Chat header */}
+            <Box
               sx={{
-                flex: 1,
+                bgcolor: "background.paper",
+                borderBottom: "1px solid",
+                borderColor: "divider",
+                px: 3,
+                py: 1.5,
                 display: "flex",
                 alignItems: "center",
-                bgcolor: "#f8f8f7",
-                border: "1px solid #ebebea",
-                borderRadius: "10px",
-                px: 2,
-                "&:focus-within": { borderColor: "#c8c7c2" },
-                transition: "border-color 0.15s",
+                gap: 1.5,
+                flexShrink: 0,
               }}
             >
-              <h1>{user?.username || "no user"}</h1>
-              <InputBase
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                placeholder={`{Message} ${activeChat.name}…`}
-                fullWidth
-                sx={{ fontSize: "13.5px", "& input": { py: "10px" } }}
-              />
-            </Paper>
-            <IconButton
-              size="small"
+              <OnlineBadge online={activeChat.online}>
+                <Avatar
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    bgcolor: avatarColor(activeChat?.name),
+                    fontSize: "13px",
+                    fontWeight: 600,
+                  }}
+                >
+                  {initials(activeChat.name)}
+                </Avatar>
+              </OnlineBadge>
+              <Box>
+                <Typography
+                  sx={{ fontWeight: 500, fontSize: "14px", color: "#1a1a18" }}
+                >
+                  {activeChat.name}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: "12px",
+                    color: activeChat?.online ? "#4ade80" : "#a0a09b",
+                  }}
+                >
+                  {activeChat.online ? "online" : "offline"}
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Messages */}
+            <Box
               sx={{
-                width: 38,
-                height: 38,
-                borderRadius: "10px",
-                bgcolor: "#1a1a18",
-                color: "#fff",
-                "&:hover": { bgcolor: "#333330" },
+                flex: 1,
+                overflowY: "auto",
+                p: 3,
+                display: "flex",
+                flexDirection: "column",
+                gap: 1.25,
               }}
             >
-              <SendOutlinedIcon sx={{ fontSize: 16 }} />
-            </IconButton>
+              {mockMessages.map((msg) => (
+                <Box
+                  key={msg.id}
+                  sx={{
+                    display: "flex",
+                    justifyContent: msg.self ? "flex-end" : "flex-start",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      maxWidth: "58%",
+                      px: 1.75,
+                      py: 1.25,
+                      borderRadius: msg.self
+                        ? "16px 16px 4px 16px"
+                        : "16px 16px 16px 4px",
+                      bgcolor: msg.self ? "#1a1a18" : "background.paper",
+                      border: msg.self ? "none" : "1px solid #ebebea",
+                      boxShadow: msg.self
+                        ? "none"
+                        : "0 1px 4px rgba(0,0,0,0.06)",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: "13.5px",
+                        lineHeight: 1.5,
+                        color: msg.self ? "#f8f8f7" : "#1a1a18",
+                      }}
+                    >
+                      {msg.text}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: "10.5px",
+                        color: msg.self ? "#8a8a86" : "#b0b0ab",
+                        mt: 0.5,
+                        textAlign: "right",
+                      }}
+                    >
+                      {msg.time}
+                    </Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+
+            {/* Message input */}
+            <Box
+              sx={{
+                p: "14px 20px",
+                borderTop: "1px solid",
+                borderColor: "divider",
+                bgcolor: "background.paper",
+                display: "flex",
+                gap: 1.25,
+                alignItems: "center",
+              }}
+            >
+              <Paper
+                elevation={0}
+                sx={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  bgcolor: "#f8f8f7",
+                  border: "1px solid #ebebea",
+                  borderRadius: "10px",
+                  px: 2,
+                  "&:focus-within": { borderColor: "#c8c7c2" },
+                  transition: "border-color 0.15s",
+                }}
+              >
+                <h1>{user?.username || "no user"}</h1>
+                <InputBase
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  placeholder={`{Message} ${activeChat.name}…`}
+                  fullWidth
+                  sx={{ fontSize: "13.5px", "& input": { py: "10px" } }}
+                />
+              </Paper>
+              <IconButton
+                size="small"
+                sx={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: "10px",
+                  bgcolor: "#1a1a18",
+                  color: "#fff",
+                  "&:hover": { bgcolor: "#333330" },
+                }}
+              >
+                <SendOutlinedIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            </Box>
           </Box>
-        </Box>
+        ) : (
+          <Box
+            sx={{
+              flex: 1, // Takes up all available space
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center", // Horizontal center
+              justifyContent: "center", // Vertical center
+              bgcolor: "background.default",
+              color: "text.secondary",
+              textAlign: "center",
+              p: 3,
+            }}
+          >
+            {/* Optional: Add an icon or image here for better UX */}
+            <Typography variant="h6" sx={{ fontWeight: 500, mb: 1 }}>
+              No Chat Selected
+            </Typography>
+            <Typography variant="body2">
+              Pick a conversation from the list to start messaging.
+            </Typography>
+          </Box>
+        )}
       </Box>
 
       {/* ── New Chat Dialog ──────────────────────────────────────────────── */}
