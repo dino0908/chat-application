@@ -64,7 +64,7 @@ export const register = async (req, res) => {
       errors: result.error.format() 
     });
   }
-  
+
   const { username, email, password } = result.data;
 
   try {
@@ -226,8 +226,8 @@ ORDER BY lm.created_at DESC;`;
 
 
 export const getMessages = async (req, res) => {
-  const { chatId } = req.params;
-  const userId = req.user.id; // From verifyToken middleware
+  const { chatId } = req.params; // id of person client is talking to
+  const userId = req.user.id; // id of client, obtained from verifyToken middleware
 
   const query = `
     SELECT 

@@ -30,20 +30,19 @@ import { useChats } from "../hooks/useChats";
 import { formatTime, formatMessageTime } from "../utils/dateFormatter";
 import { useMessages } from "../hooks/useMessages";
 import { avatarColor, initials } from "../utils/helperFunctions";
-import type { ChatType } from "../types/ChatTypes";
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
 
   const { data: suggestedUsers } = useUsers(); 
-  const { data: allChats } = useChats()
+  const { data: allChats } = useChats() // allChats is all the chats that the client is in. (not all the chats in the entire DB)
   const { user } = useAuthStore(); // client's own user object
-  const { chatId } = useParams<{ chatId: string }>(); // id the client is chatting with, taken from the URL
-  const { data: messages } = useMessages(chatId);
+  const { chatId } = useParams<{ chatId: string }>(); // id of the person the client is chatting with, taken from the URL
+  const { data: messages } = useMessages(chatId); // get chat messages between client and selectedChat
   const navigate = useNavigate();
 
-  // if URL is /chat with no params, activeChat is null. otherwise, activeChat is the chat in allChats where the conversation_id matches the id in URL params
-  const activeChat = chatId ? allChats?.find((c) => c.conversation_id === parseInt(chatId)) || null
+  // if URL is /chat with no params, selectedChat is null. otherwise, selectedChat is the chat in allChats where the conversation_id matches the id in URL params
+  const selectedChat = chatId ? allChats?.find((c) => c.conversation_id === parseInt(chatId)) || null
     : null;
     
   const [searchQuery, setSearchQuery] = useState("");
@@ -130,7 +129,7 @@ export default function Chat() {
             {filteredChats?.map((chat) => (
               <ListItemButton
                 key={chat.conversation_id}
-                selected={activeChat?.id === chat.conversation_id}
+                selected={selectedChat?.id === chat.conversation_id}
                 onClick={() => navigate(`/chat/${chat.conversation_id}`)}
                 sx={{
                   px: 1.75,
@@ -237,7 +236,7 @@ export default function Chat() {
         </Box>
 
         {/* ── Right 70% ───────────────────────────────────────────────── */}
-        {activeChat ? (
+        {selectedChat ? (
           <Box
             sx={{
               flex: 1,
@@ -260,32 +259,32 @@ export default function Chat() {
                 flexShrink: 0,
               }}
             >
-              <OnlineBadge online={activeChat.online}>
+              <OnlineBadge online={selectedChat.online}>
                 <Avatar
                   sx={{
                     width: 36,
                     height: 36,
-                    bgcolor: avatarColor(activeChat?.username),
+                    bgcolor: avatarColor(selectedChat?.username),
                     fontSize: "13px",
                     fontWeight: 600,
                   }}
                 >
-                  {initials(activeChat.username)}
+                  {initials(selectedChat.username)}
                 </Avatar>
               </OnlineBadge>
               <Box>
                 <Typography
                   sx={{ fontWeight: 500, fontSize: "14px", color: "#1a1a18" }}
                 >
-                  {activeChat.username}
+                  {selectedChat.username}
                 </Typography>
                 <Typography
                   sx={{
                     fontSize: "12px",
-                    color: activeChat?.online ? "#4ade80" : "#a0a09b",
+                    color: selectedChat?.online ? "#4ade80" : "#a0a09b",
                   }}
                 >
-                  {activeChat.online ? "online" : "offline"}
+                  {selectedChat.online ? "online" : "offline"}
                 </Typography>
               </Box>
             </Box>
@@ -301,7 +300,7 @@ export default function Chat() {
                 gap: 1.25,
               }}
             >
-              {messages?.map((msg: any) => (
+              {messages?.map((msg) => (
                 <Box
                   key={msg.id}
                   sx={{
@@ -378,7 +377,7 @@ export default function Chat() {
                 <InputBase
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
-                  placeholder={`{Message} ${activeChat.username}…`}
+                  placeholder={`{Message} ${selectedChat.username}…`}
                   fullWidth
                   sx={{ fontSize: "13.5px", "& input": { py: "10px" } }}
                 />
