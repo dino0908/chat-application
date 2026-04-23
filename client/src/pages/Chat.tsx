@@ -58,17 +58,29 @@ export default function Chat() {
   useEffect(() => {
     if (!socket) return;
 
-    // Listen for incoming messages from the server
-    socket.on("receive_message", (data) => {
-      console.log("Message received:", data);
-      // TODO: Update your messages state or trigger a refetch of messages
-    });
-
-    // Clean up listener when component unmounts
-    return () => {
-      socket.off("receive_message");
+    // Listen for incoming messages from other users
+    const handleReceiveMessage = (data: any) => {
+      // Only refetch if the message is for the current chat
+      if (data.conversationId === parseInt(chatId || "-1")) {
+        queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
+      }
     };
-  }, [socket]);
+
+    // Listen for message sent confirmation (own messages)
+    const handleMessageSent = () => {
+      // Refetch messages to show the sent message immediately
+      queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
+    };
+
+    socket.on("receive_message", handleReceiveMessage);
+    socket.on("message_sent", handleMessageSent);
+
+    // Clean up listeners when component unmounts
+    return () => {
+      socket.off("receive_message", handleReceiveMessage);
+      socket.off("message_sent", handleMessageSent);
+    };
+  }, [socket, chatId, queryClient]);
 
   const closeNewChat = () => {
     setNewChatOpen(false);
@@ -81,7 +93,6 @@ export default function Chat() {
       closeNewChat();
       // Refetch chats to update the list
       await queryClient.invalidateQueries({ queryKey: ["chats"] });
-      // Navigate to the new conversation
       navigate(`/chat/${conversation_id}`);
     } catch (error) {
       console.error("Error starting conversation:", error);
@@ -101,10 +112,10 @@ export default function Chat() {
   );
 
   const handleSendMessage = () => {
-    if (!messageInput.trim() || !selectedChat || !socket) return
+    if (!messageInput.trim() || !selectedChat || !socket || !chatId) return
 
     socket.emit("send_message", {
-      senderId: user?.id,
+      conversationId: parseInt(chatId),
       recipientId: selectedChat.id,
       content: messageInput
     })

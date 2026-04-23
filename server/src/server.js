@@ -4,6 +4,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import pool from "./config/db.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -24,35 +25,43 @@ io.on("connection", (socket) => {
 
   userSocketMap[userId] = socket.id; // add user id : socket id mapping
 
-  socket.on("send_message", ({ recipientId, content }) => {
+  socket.on("send_message", async ({ conversationId, recipientId, content }) => {
     try {
+      // Save message to database
+      const result = await pool.query(
+        `INSERT INTO messages (conversation_id, sender_id, message_text, is_read, created_at)
+         VALUES ($1, $2, $3, false, NOW())
+         RETURNING id, message_text, created_at, sender_id`,
+        [conversationId, userId, content]
+      );
 
-      // logic to save message to DB
+      const savedMessage = result.rows[0];
 
-
+      // Emit to recipient
       const recipientSocketId = userSocketMap[recipientId];
-
       if (recipientSocketId) {
-        // Send only to the specific person
         io.to(recipientSocketId).emit("receive_message", {
+          id: savedMessage.id,
+          text: savedMessage.message_text,
+          time: savedMessage.created_at,
+          self: false,
           senderId: userId,
-          content: content,
-          timestamp: new Date(),
+          conversationId: conversationId,
         });
       }
+
+      // Emit back to sender (confirmation + update UI)
+      socket.emit("message_sent", {
+        id: savedMessage.id,
+        text: savedMessage.message_text,
+        time: savedMessage.created_at,
+        self: true,
+      });
     } catch (err) {
-      console.log(err);
+      console.error("Error sending message:", err);
+      socket.emit("message_error", { error: "Failed to send message" });
     }
   });
-
-  // socket.on("disconnect", () => {
-  //   const disconnectedUserID = Object.keys(userSocketMap).find(
-  //     (key) => userSocketMap[key] === socket.id,
-  //   );
-  //   if (disconnectedUserID) {
-  //     delete userSocketMap[disconnectedUserID];
-  //   }
-  // });
 });
 
 const corsOptions = {
