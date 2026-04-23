@@ -25,7 +25,6 @@ io.on("connection", (socket) => {
 
   userSocketMap[userId] = socket.id; // add user id : socket id mapping
 
-
   socket.on("send_message", async ({ conversationId, recipientId, content }) => {
     try {
       console.log("send message event received by server", conversationId, recipientId, content)

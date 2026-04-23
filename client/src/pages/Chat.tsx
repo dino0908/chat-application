@@ -2,6 +2,11 @@
 // conversation id is like the room
 // this makes it easier to expand to group chats later
 
+// how the messages update when you select on a chat:
+// handleChatSelection updates the URL to /chat/<chatId>
+// chatId changes, useMessages(chatId) takes in chatId as a dependency
+// it refetches the new messages
+
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -38,6 +43,7 @@ import { avatarColor, initials } from "../utils/helperFunctions";
 import { useSocket } from "../context/SocketContext";
 import { startConversation } from "../api/chat";
 import type { ChatType } from "../types/ChatTypes";
+import type { MessageType } from "../types/MessageTypes";
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
@@ -53,6 +59,7 @@ export default function Chat() {
 
   // if URL is /chat with no params, selectedChat is null. otherwise, selectedChat is the chat in allChats where the conversation_id matches the id in URL params
   // this is so we know who's chat to display on the right hand side, if there is a selectedChat, display on the RHS. if not RHS shows "click on chat to start messaging"
+  // any changes to chatId (by changing the URL /chat/<chatId> either manually or through navigation), will update this selectedChat, which updates the RHS
   const selectedChat = chatId ? allChats?.find((c) => c.conversation_id === parseInt(chatId)) || null : null;
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -68,8 +75,8 @@ export default function Chat() {
   const handleChatSelection = (conversationId: number) => {
     navigate(`/chat/${conversationId}`); // navigate to the chat
 
-    queryClient.setQueryData(["chats"], (oldChats: ChatType[]) => {
-      // When user selects a chat, clear the unread count in the cache ( on client side )
+    // When user selects a chat, clear the unread count in the cache ( on client side )
+    queryClient.setQueryData(["chats"], (oldChats: ChatType[]) => {  
       return oldChats?.map((chat) =>
         chat.conversation_id === conversationId
           ? { ...chat, unread_count: 0 }
@@ -83,16 +90,18 @@ export default function Chat() {
     if (!socket) return;
 
     // Listen for incoming messages from other users
-    const handleReceiveMessage = (data: any) => { // this data is passed from the sever when it emits "receive_message" event
+    const handleReceiveMessage = (data: MessageType) => { // this data is passed from the sever when it emits "receive_message" event
       // Only refetch if the message is for the current chat
-      if (data.conversationId === parseInt(chatId || "-1")) {
-        queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
+      if (data.conversationId === parseInt(chatId!)) {  // if the incoming message is for the conversation the client is already looking at
+        queryClient.invalidateQueries({ queryKey: ["messages", chatId] }); // tells tanstack query to refetch the data so it the receiver sees it without needing to refresh
       }
     };
 
-    // Listen for message sent confirmation (own messages)
+    // Function triggered when the server sends back a confirmation to the client that their message was sent
+    // If the invalidateQuery logic was simply put in the handleSendMessage function, if the server is down and the client sends a message, it would show up on the chat, then disappear after a refresh (server was down and message never made it to DB)
+    // By having the server emit a message_sent event back to the sender, it ensures the sender only sees their sent message appear in the chat if it actually got sent
     const handleMessageSent = () => {
-      // Refetch messages to show the sent message immediately
+      // Refetch messages to show the sent message immediately, snsures the sender sees their message pop up in the chat
       queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
     };
 
@@ -113,11 +122,10 @@ export default function Chat() {
 
   const handleStartConversation = async (recipientId: number) => {
     try {
-      const { conversation_id } = await startConversation(recipientId);
+      const { conversation_id } = await startConversation(recipientId); // serverside: creates a new conversation_id in the backend and adds the id of both users to it
       closeNewChat();
-      // Refetch chats to update the list
-      await queryClient.invalidateQueries({ queryKey: ["chats"] });
-      navigate(`/chat/${conversation_id}`);
+      await queryClient.invalidateQueries({ queryKey: ["chats"] }); // Refetch chats to update the list
+      navigate(`/chat/${conversation_id}`); // navigates to this new conversation
     } catch (error) {
       console.error("Error starting conversation:", error);
     }
