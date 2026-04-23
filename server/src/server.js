@@ -35,8 +35,8 @@ io.on("connection", (socket) => {
       if (recipientSocketId) {
         // Send only to the specific person
         io.to(recipientSocketId).emit("receive_message", {
-          senderId,
-          content,
+          senderId: userId,
+          content: content,
           timestamp: new Date(),
         });
       }

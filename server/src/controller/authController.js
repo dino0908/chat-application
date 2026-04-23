@@ -247,3 +247,61 @@ export const getMessages = async (req, res) => {
     res.status(500).json({ success: false, message: "Error fetching messages" });
   }
 };
+
+// Start a new conversation with a user (or return existing one)
+export const startConversation = async (req, res) => {
+  const { recipientId } = req.body; // The user we want to chat with
+  const userId = req.user.id; // Current user from verifyToken middleware
+
+  if (!recipientId) {
+    return res.status(400).json({ success: false, message: "recipientId is required" });
+  }
+
+  if (userId === recipientId) {
+    return res.status(400).json({ success: false, message: "Cannot create conversation with yourself" });
+  }
+
+  try {
+    // Check if conversation already exists
+    const existingConversation = await pool.query(
+      `SELECT c.id 
+       FROM conversations c
+       JOIN conversation_participants cp1 ON c.id = cp1.conversation_id AND cp1.user_id = $1
+       JOIN conversation_participants cp2 ON c.id = cp2.conversation_id AND cp2.user_id = $2
+       LIMIT 1`,
+      [userId, recipientId]
+    );
+
+    if (existingConversation.rows.length > 0) {
+      // Conversation exists, return it
+      return res.status(200).json({
+        success: true,
+        data: { conversation_id: existingConversation.rows[0].id }
+      });
+    }
+
+    // Create new conversation
+    const newConversation = await pool.query(
+      `INSERT INTO conversations (created_at) 
+       VALUES (NOW()) 
+       RETURNING id`
+    );
+
+    const conversationId = newConversation.rows[0].id;
+
+    // Add both participants
+    await pool.query(
+      `INSERT INTO conversation_participants (conversation_id, user_id) 
+       VALUES ($1, $2), ($1, $3)`,
+      [conversationId, userId, recipientId]
+    );
+
+    res.status(201).json({
+      success: true,
+      data: { conversation_id: conversationId }
+    });
+  } catch (error) {
+    console.error("Error starting conversation:", error);
+    res.status(500).json({ success: false, message: "Error starting conversation" });
+  }
+};

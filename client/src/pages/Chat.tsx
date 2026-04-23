@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Typography,
   Box,
@@ -31,10 +32,12 @@ import { formatTime, formatMessageTime } from "../utils/dateFormatter";
 import { useMessages } from "../hooks/useMessages";
 import { avatarColor, initials } from "../utils/helperFunctions";
 import { useSocket } from "../context/SocketContext";
+import { startConversation } from "../api/chat";
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
   const { socket, isConnected } = useSocket(); // (TODO) isConnected can be used to determine online status 
+  const queryClient = useQueryClient();
   const { data: suggestedUsers } = useUsers(); 
   const { data: allChats } = useChats() // allChats is all the chats that the client is in. (not all the chats in the entire DB)
   const { user } = useAuthStore(); // client's own user object
@@ -70,6 +73,19 @@ export default function Chat() {
   const closeNewChat = () => {
     setNewChatOpen(false);
     setNewChatSearch("");
+  };
+
+  const handleStartConversation = async (recipientId: number) => {
+    try {
+      const { conversation_id } = await startConversation(recipientId);
+      closeNewChat();
+      // Refetch chats to update the list
+      await queryClient.invalidateQueries({ queryKey: ["chats"] });
+      // Navigate to the new conversation
+      navigate(`/chat/${conversation_id}`);
+    } catch (error) {
+      console.error("Error starting conversation:", error);
+    }
   };
 
   // search chats function, narrows down allChats to only display the ones where the username is in the searchQuery
@@ -522,10 +538,7 @@ export default function Chat() {
                 {filteredUsers.map((user) => (
                   <ListItem key={user.id} disablePadding>
                     <ListItemButton
-                      onClick={() => {
-                        closeNewChat();
-                        navigate(`/chat/${user.id}`);
-                      }}
+                      onClick={() => handleStartConversation(user.id)}
                       sx={{
                         borderRadius: "8px",
                         px: 1.25,
