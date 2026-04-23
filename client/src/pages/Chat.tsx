@@ -29,26 +29,7 @@ import { useUsers } from "../hooks/useUsers";
 import { useChats } from "../hooks/useChats";
 import { formatTime, formatMessageTime } from "../utils/dateFormatter";
 import { useMessages } from "../hooks/useMessages";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-const avatarColor = (name: string) => {
-  const colors = [
-    "#2563eb",
-    "#7c3aed",
-    "#0891b2",
-    "#059669",
-    "#d97706",
-    "#dc2626",
-  ];
-  return colors[name.charCodeAt(0) % colors.length];
-};
-
-const initials = (name: string) =>
-  name
-    .split(" ")
-    .map((n) => n[0])
-    .join("");
-
+import { avatarColor, initials } from "../utils/helperFunctions";
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
@@ -59,10 +40,6 @@ export default function Chat() {
   const { chatId } = useParams<{ chatId: string }>(); // id the client is chatting with, taken from the URL
   const { data: messages } = useMessages(chatId);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    console.log(allChats)
-  }, [allChats])
 
   const activeChat = chatId
     ? allChats?.find((c: any) => c.conversation_id === parseInt(chatId)) || null
