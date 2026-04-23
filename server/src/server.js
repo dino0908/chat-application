@@ -25,6 +25,18 @@ io.on("connection", (socket) => {
 
   userSocketMap[userId] = socket.id; // add user id : socket id mapping
 
+  // Broadcast to everyone that this user is now online
+  socket.broadcast.emit("user_online", { userId: parseInt(userId) });
+
+  // Send the current online users list to the newly connected user
+  socket.emit("online_users", Object.keys(userSocketMap).map(Number));
+
+  socket.on("disconnect", () => {
+    delete userSocketMap[userId];
+    // Broadcast to everyone that this user went offline
+    io.emit("user_offline", { userId: parseInt(userId) });
+  });
+
   socket.on("send_message", async ({ conversationId, recipientId, content }) => {
     try {
       console.log("send message event received by server", conversationId, recipientId, content)

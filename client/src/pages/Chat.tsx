@@ -48,7 +48,7 @@ import type { MessageType } from "../types/MessageTypes";
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null); // used to scroll down the chat automatically on every message sent / received
-  const { socket } = useSocket();
+  const { socket, onlineUsers } = useSocket();
   const queryClient = useQueryClient();
   const { data: suggestedUsers } = useUsers();
   const { data: allChats } = useChats(); // allChats is all the chats that the client is in. (not all the chats in the entire DB)
@@ -66,6 +66,11 @@ export default function Chat() {
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatSearch, setNewChatSearch] = useState("");
   const [messageInput, setMessageInput] = useState("");
+
+
+  useEffect(() => {
+    console.log("online users:", onlineUsers)
+  }, [onlineUsers])
 
     useEffect(() => {
     // used to scroll down the chat automatically on every message sent / received

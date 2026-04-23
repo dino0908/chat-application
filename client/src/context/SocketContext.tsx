@@ -5,13 +5,15 @@ import { useAuthStore } from '../store/useAuthStore';
 interface SocketContextType {
   socket: Socket | null;
   isConnected: boolean;
+  onlineUsers: number[]
 }
 
-const SocketContext = createContext<SocketContextType>({ socket: null, isConnected: false });
+const SocketContext = createContext<SocketContextType>({ socket: null, isConnected: false, onlineUsers: [] });
 
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [onlineUsers, setOnlineUsers] = useState<number[]>([]);
   const { user } = useAuthStore();
 
   useEffect(() => {
@@ -38,6 +40,14 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       console.error('Socket connection error:', error);
     });
 
+    newSocket.on('online_users', (userIds: number[]) => setOnlineUsers(userIds));
+
+    newSocket.on('user_online', ({ userId }: { userId: number }) => 
+      setOnlineUsers((prev) => [...new Set([...prev, userId])]));
+
+    newSocket.on('user_offline', ({ userId }: { userId: number }) => 
+      setOnlineUsers((prev) => prev.filter((id) => id !== userId)));
+
     setSocket(newSocket);
 
     // Cleanup: Disconnect when user logs out or component unmounts
@@ -47,7 +57,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   }, [user?.id]);
 
   return (
-    <SocketContext.Provider value={{ socket, isConnected }}>
+    <SocketContext.Provider value={{ socket, isConnected, onlineUsers }}>
       {children}
     </SocketContext.Provider>
   );
