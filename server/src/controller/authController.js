@@ -306,33 +306,16 @@ export const startConversation = async (req, res) => {
   }
 };
 
-// Mark all unread messages in a conversation as read
-export const markMessagesAsRead = async (req, res) => {
-  const { conversationId } = req.body;
-  const userId = req.user.id;
 
-  if (!conversationId) {
-    return res.status(400).json({ success: false, message: "conversationId is required" });
-  }
+export const readChat = async (req, res) => {
+  const { id } = req.params
+  const userId = req.user.id
 
-  try {
-    // Update all unread messages from other users in this conversation
-    const result = await pool.query(
-      `UPDATE messages 
-       SET is_read = true 
-       WHERE conversation_id = $1 
-         AND sender_id != $2 
-         AND is_read = false
-       RETURNING id`,
-      [conversationId, userId]
-    );
+  await db.messages.updateMany({
+     where: { conversation_id: id, recipient_id: userId, read: false },
+     data: { read: true }
+   });
+   
+   res.sendStatus(200);
 
-    res.status(200).json({
-      success: true,
-      message: `Marked ${result.rowCount} messages as read`
-    });
-  } catch (error) {
-    console.error("Error marking messages as read:", error);
-    res.status(500).json({ success: false, message: "Error marking messages as read" });
-  }
-};
+}
