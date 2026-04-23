@@ -184,7 +184,6 @@ export const getChats = async (req, res) => {
     c.id AS conversation_id,
     u.id AS id,
     u.username AS username,
-    u.is_online AS online,
     lm.message_text AS "lastMessage",
     lm.created_at AS time,
     (
