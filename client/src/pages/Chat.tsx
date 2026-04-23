@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -36,6 +36,7 @@ import { startConversation } from "../api/chat";
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { socket, isConnected } = useSocket(); // (TODO) isConnected can be used to determine online status 
   const queryClient = useQueryClient();
   const { data: suggestedUsers } = useUsers(); 
@@ -53,6 +54,10 @@ export default function Chat() {
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatSearch, setNewChatSearch] = useState("");
   const [messageInput, setMessageInput] = useState("");
+
+  useEffect(() => {
+  messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+}, [messages]);
 
   // ─── Socket Listeners ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -401,6 +406,7 @@ export default function Chat() {
                   </Box>
                 </Box>
               ))}
+              <div ref={messagesEndRef} />
             </Box>
 
             {/* Message input */}
