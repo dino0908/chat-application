@@ -1,3 +1,7 @@
+// a conversation id is shared between 2 user ids, (2 people involved in the chat)
+// conversation id is like the room
+// this makes it easier to expand to group chats later
+
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
@@ -32,58 +36,54 @@ import { formatTime, formatMessageTime } from "../utils/dateFormatter";
 import { useMessages } from "../hooks/useMessages";
 import { avatarColor, initials } from "../utils/helperFunctions";
 import { useSocket } from "../context/SocketContext";
-import { startConversation, markMessagesAsRead } from "../api/chat";
+import { startConversation } from "../api/chat";
+import type { ChatType } from "../types/ChatTypes";
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { socket, isConnected } = useSocket(); // (TODO) isConnected can be used to determine online status 
+  const messagesEndRef = useRef<HTMLDivElement>(null); // used to scroll down the chat automatically on every message sent / received
+  const { socket, isConnected } = useSocket(); // (TODO) isConnected can be used to determine online status
   const queryClient = useQueryClient();
-  const { data: suggestedUsers } = useUsers(); 
-  const { data: allChats } = useChats() // allChats is all the chats that the client is in. (not all the chats in the entire DB)
+  const { data: suggestedUsers } = useUsers();
+  const { data: allChats } = useChats(); // allChats is all the chats that the client is in. (not all the chats in the entire DB)
   const { user } = useAuthStore(); // client's own user object
-  const { chatId } = useParams<{ chatId: string }>(); // id of the person the client is chatting with, taken from the URL
+  const { chatId } = useParams<{ chatId: string }>(); // conversation id, aka the "room" id taken from URL
   const { data: messages } = useMessages(chatId); // get chat messages between client and selectedChat
   const navigate = useNavigate();
 
   // if URL is /chat with no params, selectedChat is null. otherwise, selectedChat is the chat in allChats where the conversation_id matches the id in URL params
-  const selectedChat = chatId ? allChats?.find((c) => c.conversation_id === parseInt(chatId)) || null
-    : null;
-    
+  // this is so we know who's chat to display on the right hand side, if there is a selectedChat, display on the RHS. if not RHS shows "click on chat to start messaging"
+  const selectedChat = chatId ? allChats?.find((c) => c.conversation_id === parseInt(chatId)) || null : null;
+
   const [searchQuery, setSearchQuery] = useState("");
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatSearch, setNewChatSearch] = useState("");
   const [messageInput, setMessageInput] = useState("");
 
-  useEffect(() => {
-  messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-}, [messages]);
+    useEffect(() => {
+    // used to scroll down the chat automatically on every message sent / received
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-  // ─── Mark Messages as Read ─────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!chatId || !socket) return;
+  const handleChatSelection = (conversationId: number) => {
+    navigate(`/chat/${conversationId}`); // navigate to the chat
 
-    const markAsRead = async () => {
-      try {
-        await markMessagesAsRead(parseInt(chatId));
-        // Also emit socket event for real-time sync
-        socket.emit("mark_as_read", { conversationId: parseInt(chatId) });
-        // Refetch chats to update the unread count on the left sidebar
-        await queryClient.invalidateQueries({ queryKey: ["chats"] });
-      } catch (error) {
-        console.error("Error marking messages as read:", error);
-      }
-    };
-
-    markAsRead();
-  }, [chatId, socket, queryClient]);
+    queryClient.setQueryData(["chats"], (oldChats: ChatType[]) => {
+      // When user selects a chat, clear the unread count in the cache ( on client side )
+      return oldChats?.map((chat) =>
+        chat.conversation_id === conversationId
+          ? { ...chat, unread_count: 0 }
+          : chat,
+      );
+    });
+  };
 
   // ─── Socket Listeners ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!socket) return;
 
     // Listen for incoming messages from other users
-    const handleReceiveMessage = (data: any) => {
+    const handleReceiveMessage = (data: any) => { // this data is passed from the sever when it emits "receive_message" event
       // Only refetch if the message is for the current chat
       if (data.conversationId === parseInt(chatId || "-1")) {
         queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
@@ -132,20 +132,20 @@ export default function Chat() {
   const filteredUsers = (suggestedUsers || []).filter(
     (u) =>
       newChatSearch.length > 0 &&
-        u.username.toLowerCase().includes(newChatSearch.toLowerCase()) && u.username !== user?.username // Excludes client's own username from the results
+      u.username.toLowerCase().includes(newChatSearch.toLowerCase()) &&
+      u.username !== user?.username, // Excludes client's own username from the results
   );
 
   const handleSendMessage = () => {
-    if (!messageInput.trim() || !selectedChat || !socket || !chatId) return
-
-    socket.emit("send_message", {
+    if (!messageInput.trim() || !selectedChat || !socket || !chatId) return;
+    socket.emit("send_message", { // doesn't pass sender id (client id) as can be obtained on server side
       conversationId: parseInt(chatId),
       recipientId: selectedChat.id,
-      content: messageInput
-    })
+      content: messageInput,
+    });
 
-    setMessageInput("")
-  }
+    setMessageInput("");
+  };
 
   return (
     <Box
@@ -210,7 +210,7 @@ export default function Chat() {
               <ListItemButton
                 key={chat.conversation_id}
                 selected={selectedChat?.id === chat.conversation_id}
-                onClick={() => navigate(`/chat/${chat.conversation_id}`)}
+                onClick={() => handleChatSelection(chat.conversation_id)}
                 sx={{
                   px: 1.75,
                   py: 1.25,
@@ -425,6 +425,7 @@ export default function Chat() {
                   </Box>
                 </Box>
               ))}
+              {/* used to scroll down the chat automatically on every message sent / received */}
               <div ref={messagesEndRef} />
             </Box>
 
@@ -457,7 +458,7 @@ export default function Chat() {
                 <InputBase
                   onKeyDown={(e) => {
                     if (e.key == "Enter") {
-                      handleSendMessage()
+                      handleSendMessage();
                     }
                   }}
                   value={messageInput}
