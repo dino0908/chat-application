@@ -3,9 +3,10 @@
 
 import { create } from "zustand";
 import axios from "axios";
+import { type UserType } from "../types/UserTypes"
 
 interface AuthState {
-  user: any | null;
+  user: UserType | null;
   setAuth: (userData: any) => void;
   logout: () => void;
   checkAuth: () => Promise<void>;

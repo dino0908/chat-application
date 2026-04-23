@@ -30,19 +30,20 @@ import { useChats } from "../hooks/useChats";
 import { formatTime, formatMessageTime } from "../utils/dateFormatter";
 import { useMessages } from "../hooks/useMessages";
 import { avatarColor, initials } from "../utils/helperFunctions";
+import type { ChatType } from "../types/ChatTypes";
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
 
-  const { data: suggestedUsers } = useUsers();
+  const { data: suggestedUsers } = useUsers(); 
   const { data: allChats } = useChats()
-  const { user } = useAuthStore();
+  const { user } = useAuthStore(); // client's own user object
   const { chatId } = useParams<{ chatId: string }>(); // id the client is chatting with, taken from the URL
   const { data: messages } = useMessages(chatId);
   const navigate = useNavigate();
 
-  const activeChat = chatId
-    ? allChats?.find((c: any) => c.conversation_id === parseInt(chatId)) || null
+  // if URL is /chat with no params, activeChat is null. otherwise, activeChat is the chat in allChats where the conversation_id matches the id in URL params
+  const activeChat = chatId ? allChats?.find((c) => c.conversation_id === parseInt(chatId)) || null
     : null;
     
   const [searchQuery, setSearchQuery] = useState("");
