@@ -484,7 +484,7 @@ export default function Chat() {
               </Typography>
             ) : (
               <List disablePadding>
-                {filteredUsers.map((user: any) => (
+                {filteredUsers.map((user) => (
                   <ListItem key={user.id} disablePadding>
                     <ListItemButton
                       onClick={() => {
