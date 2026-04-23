@@ -1,6 +1,7 @@
 import pool from "../config/db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { registerSchema } from "../schema/authSchema.ts"
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
@@ -54,7 +55,17 @@ export const login = async (req, res) => {
 };
 
 export const register = async (req, res) => {
-  const { username, email, password } = req.body;
+  
+  const result = registerSchema.safeParse(req.body)
+
+  if (!result.success) {
+    return res.status(400).json({ 
+      message: "Invalid input", 
+      errors: result.error.format() 
+    });
+  }
+  
+  const { username, email, password } = result.data;
 
   try {
     // 1. Check if user already exists
