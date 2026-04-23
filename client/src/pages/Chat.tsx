@@ -144,6 +144,7 @@ export default function Chat() {
       u.username !== user?.username, // Excludes client's own username from the results
   );
 
+  // emits send_message event to server and clears input
   const handleSendMessage = () => {
     if (!messageInput.trim() || !selectedChat || !socket || !chatId) return;
     socket.emit("send_message", { // doesn't pass sender id (client id) as can be obtained on server side
@@ -151,7 +152,6 @@ export default function Chat() {
       recipientId: selectedChat.id,
       content: messageInput,
     });
-
     setMessageInput("");
   };
 
