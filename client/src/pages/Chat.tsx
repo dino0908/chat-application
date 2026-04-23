@@ -30,10 +30,11 @@ import { useChats } from "../hooks/useChats";
 import { formatTime, formatMessageTime } from "../utils/dateFormatter";
 import { useMessages } from "../hooks/useMessages";
 import { avatarColor, initials } from "../utils/helperFunctions";
+import { useSocket } from "../context/SocketContext";
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
-
+  const { socket, isConnected } = useSocket(); // (TODO) isConnected can be used to determine online status 
   const { data: suggestedUsers } = useUsers(); 
   const { data: allChats } = useChats() // allChats is all the chats that the client is in. (not all the chats in the entire DB)
   const { user } = useAuthStore(); // client's own user object
@@ -49,6 +50,22 @@ export default function Chat() {
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatSearch, setNewChatSearch] = useState("");
   const [messageInput, setMessageInput] = useState("");
+
+  // ─── Socket Listeners ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!socket) return;
+
+    // Listen for incoming messages from the server
+    socket.on("receive_message", (data) => {
+      console.log("Message received:", data);
+      // TODO: Update your messages state or trigger a refetch of messages
+    });
+
+    // Clean up listener when component unmounts
+    return () => {
+      socket.off("receive_message");
+    };
+  }, [socket]);
 
   const closeNewChat = () => {
     setNewChatOpen(false);
@@ -66,6 +83,18 @@ export default function Chat() {
       newChatSearch.length > 0 &&
         u.username.toLowerCase().includes(newChatSearch.toLowerCase()) && u.username !== user?.username // Excludes client's own username from the results
   );
+
+  const handleSendMessage = () => {
+    if (!messageInput.trim() || !selectedChat || !socket) return
+
+    socket.emit("send_message", {
+      senderId: user?.id,
+      recipientId: selectedChat.id,
+      content: messageInput
+    })
+
+    setMessageInput("")
+  }
 
   return (
     <Box
@@ -374,6 +403,11 @@ export default function Chat() {
                 }}
               >
                 <InputBase
+                  onKeyDown={(e) => {
+                    if (e.key == "Enter") {
+                      handleSendMessage()
+                    }
+                  }}
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
                   placeholder={`{Message} ${selectedChat.username}…`}
@@ -382,6 +416,7 @@ export default function Chat() {
                 />
               </Paper>
               <IconButton
+                onClick={handleSendMessage}
                 size="small"
                 sx={{
                   width: 38,
