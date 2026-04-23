@@ -2,9 +2,20 @@ import routes from "./routes/routes.js"
 import cors from 'cors';
 import express from 'express';
 import cookieParser from 'cookie-parser';
+import { createServer } from "http";
+import { Server } from "socket.io"
 
-const app = express();       
+const app = express(); 
+const httpServer = createServer(app);      
 const PORT = 5000;          
+
+const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
 
 const corsOptions = {
   origin: 'http://localhost:5173', 
@@ -24,6 +35,6 @@ app.use(express.json())
 app.use('/api', routes)
 
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`Server is alive at http://localhost:${PORT}`);
 });
