@@ -10,6 +10,7 @@ import { useMutation } from "@tanstack/react-query";
 import { loginUser, registerUser } from "../api/auth";
 import { useNavigate } from "react-router";
 import { useAuthStore } from "../store/useAuthStore";
+import { type UserType } from "../types/UserTypes";
 
 import {
   Box,
@@ -51,16 +52,16 @@ function Landing() {
     mode: "onSubmit",
   });
 
+
   const loginMutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (data) => {
-      console.log("Success!", data);
+      console.log("Login success", data)
       setAuth(data.user);
       navigate("/chat");
     },
     onError: (error: Error) => {
       console.error("Login Error:", error.message);
-      // logic to display snackbar
       setErrorMessage(error.message);
       setOpenSnackbar(true);
     },

@@ -1,16 +1,16 @@
 import { type AuthFormType } from "../schema/authSchema";
+import { type AuthResponse } from "../types/AuthTypes";
 import axios from "axios";
 
-export const loginUser = async (data: AuthFormType) => {
+export const loginUser = async (data: AuthFormType): Promise<AuthResponse> => {
   try {
-    const response = await axios.post("http://localhost:5000/api/login", data, {
+    const response = await axios.post<AuthResponse>("http://localhost:5000/api/login", data, {
       withCredentials: true,
       headers: {
         "Content-Type": "application/json",
       },
     });
-
-    return response.data;
+    return response.data
   } catch (error: any) {
     const errorMessage =
       error.response?.data?.message ||
@@ -19,9 +19,9 @@ export const loginUser = async (data: AuthFormType) => {
   }
 };
 
-export const registerUser = async (data: AuthFormType) => {
+export const registerUser = async (data: AuthFormType): Promise<AuthResponse> => {
   try {
-    const response = await axios.post(
+    const response = await axios.post<AuthResponse>(
       "http://localhost:5000/api/register",
       data,
       {

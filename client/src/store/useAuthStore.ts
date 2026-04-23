@@ -7,7 +7,7 @@ import { type UserType } from "../types/UserTypes"
 
 interface AuthState {
   user: UserType | null;
-  setAuth: (userData: any) => void;
+  setAuth: (userData: UserType) => void;
   logout: () => void;
   checkAuth: () => Promise<void>;
   isCheckingAuth: boolean;
@@ -20,7 +20,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     try {
-      // 1. Call the backend to clear the cookie
+      // Call the backend to clear the cookie
       await axios.get(
         "http://localhost:5000/api/logout",
         {

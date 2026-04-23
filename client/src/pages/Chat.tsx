@@ -62,7 +62,7 @@ export default function Chat() {
 
   // displays the chats where the username matches the searchquery, for finding users to start a new conversation with
   const filteredUsers = (suggestedUsers || []).filter(
-    (u: any) =>
+    (u) =>
       newChatSearch.length > 0 &&
         u.username.toLowerCase().includes(newChatSearch.toLowerCase()) && u.username !== user?.username // Excludes client's own username from the results
   );
@@ -373,7 +373,6 @@ export default function Chat() {
                   transition: "border-color 0.15s",
                 }}
               >
-                <h1>{user?.username || "no user"}</h1>
                 <InputBase
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
