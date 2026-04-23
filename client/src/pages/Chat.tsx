@@ -56,14 +56,16 @@ export default function Chat() {
     setNewChatSearch("");
   };
 
-  const filteredChats = allChats?.filter((c: any) =>
+  // search chats function, narrows down allChats to only display the ones where the username is in the searchQuery
+  const filteredChats = allChats?.filter((c) =>
     c.username?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
+  // displays the chats where the username matches the searchquery, for finding users to start a new conversation with
   const filteredUsers = (suggestedUsers || []).filter(
     (u: any) =>
       newChatSearch.length > 0 &&
-        u.username.toLowerCase().includes(newChatSearch.toLowerCase()) && u.username !== user?.username // Excludes you from the results,
+        u.username.toLowerCase().includes(newChatSearch.toLowerCase()) && u.username !== user?.username // Excludes client's own username from the results
   );
 
   return (
@@ -125,7 +127,7 @@ export default function Chat() {
 
           {/* Chat list */}
           <List disablePadding sx={{ flex: 1, overflowY: "auto", pb: 1 }}>
-            {filteredChats?.map((chat: any) => (
+            {filteredChats?.map((chat) => (
               <ListItemButton
                 key={chat.conversation_id}
                 selected={activeChat?.id === chat.conversation_id}
