@@ -32,7 +32,7 @@ import { formatTime, formatMessageTime } from "../utils/dateFormatter";
 import { useMessages } from "../hooks/useMessages";
 import { avatarColor, initials } from "../utils/helperFunctions";
 import { useSocket } from "../context/SocketContext";
-import { startConversation } from "../api/chat";
+import { startConversation, markMessagesAsRead } from "../api/chat";
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
@@ -58,6 +58,25 @@ export default function Chat() {
   useEffect(() => {
   messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 }, [messages]);
+
+  // ─── Mark Messages as Read ─────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!chatId || !socket) return;
+
+    const markAsRead = async () => {
+      try {
+        await markMessagesAsRead(parseInt(chatId));
+        // Also emit socket event for real-time sync
+        socket.emit("mark_as_read", { conversationId: parseInt(chatId) });
+        // Refetch chats to update the unread count on the left sidebar
+        await queryClient.invalidateQueries({ queryKey: ["chats"] });
+      } catch (error) {
+        console.error("Error marking messages as read:", error);
+      }
+    };
+
+    markAsRead();
+  }, [chatId, socket, queryClient]);
 
   // ─── Socket Listeners ─────────────────────────────────────────────────────────
   useEffect(() => {

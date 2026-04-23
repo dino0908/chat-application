@@ -62,6 +62,23 @@ io.on("connection", (socket) => {
       socket.emit("message_error", { error: "Failed to send message" });
     }
   });
+
+  // Mark messages as read when user views a chat
+  socket.on("mark_as_read", async ({ conversationId }) => {
+    try {
+      await pool.query(
+        `UPDATE messages 
+         SET is_read = true 
+         WHERE conversation_id = $1 
+           AND sender_id != $2 
+           AND is_read = false`,
+        [conversationId, userId]
+      );
+      console.log(`Messages in conversation ${conversationId} marked as read for user ${userId}`);
+    } catch (err) {
+      console.error("Error marking messages as read:", err);
+    }
+  });
 });
 
 const corsOptions = {

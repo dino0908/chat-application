@@ -8,3 +8,11 @@ export const startConversation = async (recipientId: number): Promise<{ conversa
 
   return data.data;
 };
+
+export const markMessagesAsRead = async (conversationId: number): Promise<void> => {
+  await axios.post(
+    `http://localhost:5000/api/markMessagesAsRead`,
+    { conversationId },
+    { withCredentials: true }
+  );
+};
