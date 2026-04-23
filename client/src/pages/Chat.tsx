@@ -124,8 +124,8 @@ export default function Chat() {
     try {
       const { conversation_id } = await startConversation(recipientId); // serverside: creates a new conversation_id in the backend and adds the id of both users to it
       closeNewChat();
-      await queryClient.invalidateQueries({ queryKey: ["chats"] }); // Refetch chats to update the list
-      navigate(`/chat/${conversation_id}`); // navigates to this new conversation
+      await queryClient.invalidateQueries({ queryKey: ["chats"] }); // Refetch chats to update the list of chats on the LHS to include the newly started chat
+      navigate(`/chat/${conversation_id}`); // navigates to this new conversation. changing the URL changes chatId (which is read from URL params) which updates selectedChat and shows the corresponding RHS
     } catch (error) {
       console.error("Error starting conversation:", error);
     }
