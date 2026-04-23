@@ -25,6 +25,7 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
+import { connectSocket } from "../utils/socket";
 
 function Landing() {
   const setAuth = useAuthStore((state) => state.setAuth)
@@ -58,6 +59,7 @@ function Landing() {
     onSuccess: (data) => {
       console.log("Login success", data)
       setAuth(data.user);
+      connectSocket(data.user.id); // connect to socket on serverside
       navigate("/chat");
     },
     onError: (error: Error) => {
