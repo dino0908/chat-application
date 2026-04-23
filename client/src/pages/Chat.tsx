@@ -236,7 +236,7 @@ export default function Chat() {
                 }}
               >
                 <ListItemAvatar sx={{ minWidth: "auto" }}>
-                  <OnlineBadge online={chat.online}>
+                  <OnlineBadge online={onlineUsers.includes(chat.id)}>
                     <Avatar
                       sx={{
                         width: 36,
@@ -352,7 +352,7 @@ export default function Chat() {
                 flexShrink: 0,
               }}
             >
-              <OnlineBadge online={selectedChat.online}>
+              <OnlineBadge online={onlineUsers.includes(selectedChat.id)}>
                 <Avatar
                   sx={{
                     width: 36,
@@ -374,10 +374,10 @@ export default function Chat() {
                 <Typography
                   sx={{
                     fontSize: "12px",
-                    color: selectedChat?.online ? "#4ade80" : "#a0a09b",
+                    color: onlineUsers.includes(selectedChat.id) ? "#4ade80" : "#a0a09b",
                   }}
                 >
-                  {selectedChat.online ? "online" : "offline"}
+                  {onlineUsers.includes(selectedChat.id) ? "online" : "offline"}
                 </Typography>
               </Box>
             </Box>
