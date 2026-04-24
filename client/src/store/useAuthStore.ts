@@ -3,7 +3,9 @@
 
 import { create } from "zustand";
 import axios from "axios";
-import { type UserType } from "../types/UserTypes"
+import { type UserType } from "../types/UserTypes";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 interface AuthState {
   user: UserType | null;
@@ -22,7 +24,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       // Call the backend to clear the cookie
       await axios.get(
-        "http://localhost:5000/api/logout",
+        `${API_BASE_URL}/api/logout`,
         {
           withCredentials: true,
         },
@@ -37,7 +39,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   checkAuth: async () => {
     set({ isCheckingAuth: true });
     try {
-      const response = await axios.get("http://localhost:5000/api/me", {
+      const response = await axios.get(`${API_BASE_URL}/api/me`, {
         withCredentials: true, // Requried for sending the HTTP-only cookie with Axios
         headers: { "Content-Type": "application/json" },
       });

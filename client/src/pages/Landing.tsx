@@ -10,7 +10,6 @@ import { useMutation } from "@tanstack/react-query";
 import { loginUser, registerUser } from "../api/auth";
 import { useNavigate } from "react-router";
 import { useAuthStore } from "../store/useAuthStore";
-import { type UserType } from "../types/UserTypes";
 
 import {
   Box,

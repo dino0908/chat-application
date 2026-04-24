@@ -2,9 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { type MessageType } from "../types/MessageTypes";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
 const fetchMessages = async (chatId: string): Promise<MessageType[]> => {
   const { data } = await axios.get<{ data: MessageType[] }>(
-    `http://localhost:5000/api/messages/${chatId}`,
+    `${API_BASE_URL}/api/messages/${chatId}`,
     { withCredentials: true },
   );
   return data.data;

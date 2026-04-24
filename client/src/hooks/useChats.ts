@@ -2,10 +2,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { type ChatType } from "../types/ChatTypes";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
 // --- API Functions (Standalone) ---
 
 const fetchChats = async (): Promise<ChatType[]> => {
-  const { data } = await axios.get<{ data: ChatType[] }>("http://localhost:5000/api/getChats", {
+  const { data } = await axios.get<{ data: ChatType[] }>(`${API_BASE_URL}/api/getChats`, {
     withCredentials: true,
   });
   return data.data;
@@ -13,7 +15,7 @@ const fetchChats = async (): Promise<ChatType[]> => {
 
 export const markMessagesAsRead = async (conversationId: number): Promise<void> => {
   await axios.post(
-    `http://localhost:5000/api/markMessagesAsRead`,
+    `${API_BASE_URL}/api/markMessagesAsRead`,
     { conversationId },
     { withCredentials: true }
   );

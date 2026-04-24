@@ -5,16 +5,20 @@ import cookieParser from "cookie-parser";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import pool from "./config/db.js";
+import dotenv from "dotenv";
+
+dotenv.config(); // Load environment variables from .env file
 
 const app = express();
 const httpServer = createServer(app);
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
 const userSocketMap = {}; // { userId: socketId }
 
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: CLIENT_URL,
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -91,7 +95,7 @@ io.on("connection", (socket) => {
 });
 
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: CLIENT_URL,
   credentials: true, // This allows the browser to accept the cookie
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
@@ -106,6 +110,4 @@ app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
 
-httpServer.listen(PORT, () => {
-  console.log(`Server is alive at http://localhost:${PORT}`);
-});
+httpServer.listen(PORT);
