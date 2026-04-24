@@ -41,7 +41,7 @@ import { formatTime, formatMessageTime } from "../utils/dateFormatter";
 import { useMessages } from "../hooks/useMessages";
 import { avatarColor, initials } from "../utils/helperFunctions";
 import { useSocket } from "../context/SocketContext";
-import { startConversation } from "../api/chat";
+import { startConversation, markMessagesAsRead } from "../api/chat";
 import type { ChatType } from "../types/ChatTypes";
 import type { MessageType } from "../types/MessageTypes";
 
@@ -72,6 +72,20 @@ export default function Chat() {
     console.log("online users:", onlineUsers)
   }, [onlineUsers])
 
+  // Mark messages as read when entering a chat
+  useEffect(() => {
+    if (chatId) {
+      markMessagesAsRead(parseInt(chatId))
+        .then(() => {
+          // Refetch chats to update unread count in the list
+          queryClient.invalidateQueries({ queryKey: ["chats"] });
+        })
+        .catch((error) => {
+          console.error("Error marking messages as read:", error);
+        });
+    }
+  }, [chatId, queryClient]);
+
     useEffect(() => {
     // used to scroll down the chat automatically on every message sent / received
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -88,6 +102,16 @@ export default function Chat() {
           : chat,
       );
     });
+
+    // Mark messages as read in the database
+    markMessagesAsRead(conversationId)
+      .then(() => {
+        // Refetch chats to update unread count in the list
+        queryClient.invalidateQueries({ queryKey: ["chats"] });
+      })
+      .catch((error) => {
+        console.error("Error marking messages as read:", error);
+      });
   };
 
   // ─── Socket Listeners ─────────────────────────────────────────────────────────
