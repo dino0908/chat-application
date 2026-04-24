@@ -36,12 +36,12 @@ import SearchBox from "../components/SearchBox";
 import OnlineBadge from "../components/OnlineBadge";
 import { useAuthStore } from "../store/useAuthStore";
 import { useUsers } from "../hooks/useUsers";
-import { useChats } from "../hooks/useChats";
+import { useChats, useMarkAsRead } from "../hooks/useChats";
 import { formatTime, formatMessageTime } from "../utils/dateFormatter";
 import { useMessages } from "../hooks/useMessages";
 import { avatarColor, initials } from "../utils/helperFunctions";
 import { useSocket } from "../context/SocketContext";
-import { startConversation, markMessagesAsRead } from "../api/chat";
+import { startConversation } from "../api/chat";
 import type { ChatType } from "../types/ChatTypes";
 import type { MessageType } from "../types/MessageTypes";
 
@@ -50,8 +50,9 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null); // used to scroll down the chat automatically on every message sent / received
   const { socket, onlineUsers } = useSocket();
   const queryClient = useQueryClient();
-  const { data: suggestedUsers } = useUsers();
+  const { data: suggestedUsers } = useUsers(); // list of users that show when client tries to start a new conversation
   const { data: allChats } = useChats(); // allChats is all the chats that the client is in. (not all the chats in the entire DB)
+  const { mutate: markAsRead } = useMarkAsRead();
   const { user } = useAuthStore(); // client's own user object
   const { chatId } = useParams<{ chatId: string }>(); // conversation id, aka the "room" id taken from URL
   const { data: messages } = useMessages(chatId); // get chat messages between client and selectedChat
@@ -60,33 +61,16 @@ export default function Chat() {
   // if URL is /chat with no params, selectedChat is null. otherwise, selectedChat is the chat in allChats where the conversation_id matches the id in URL params
   // this is so we know who's chat to display on the right hand side, if there is a selectedChat, display on the RHS. if not RHS shows "click on chat to start messaging"
   // any changes to chatId (by changing the URL /chat/<chatId> either manually or through navigation), will update this selectedChat, which updates the RHS
-  const selectedChat = chatId ? allChats?.find((c) => c.conversation_id === parseInt(chatId)) || null : null;
+  const selectedChat = chatId
+    ? allChats?.find((c) => c.conversation_id === parseInt(chatId)) || null
+    : null;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatSearch, setNewChatSearch] = useState("");
   const [messageInput, setMessageInput] = useState("");
 
-
   useEffect(() => {
-    console.log("online users:", onlineUsers)
-  }, [onlineUsers])
-
-  // Mark messages as read when entering a chat
-  useEffect(() => {
-    if (chatId) {
-      markMessagesAsRead(parseInt(chatId))
-        .then(() => {
-          // Refetch chats to update unread count in the list
-          queryClient.invalidateQueries({ queryKey: ["chats"] });
-        })
-        .catch((error) => {
-          console.error("Error marking messages as read:", error);
-        });
-    }
-  }, [chatId, queryClient]);
-
-    useEffect(() => {
     // used to scroll down the chat automatically on every message sent / received
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -94,24 +78,8 @@ export default function Chat() {
   const handleChatSelection = (conversationId: number) => {
     navigate(`/chat/${conversationId}`); // navigate to the chat
 
-    // When user selects a chat, clear the unread count in the cache ( on client side )
-    queryClient.setQueryData(["chats"], (oldChats: ChatType[]) => {  
-      return oldChats?.map((chat) =>
-        chat.conversation_id === conversationId
-          ? { ...chat, unread_count: 0 }
-          : chat,
-      );
-    });
-
-    // Mark messages as read in the database
-    markMessagesAsRead(conversationId)
-      .then(() => {
-        // Refetch chats to update unread count in the list
-        queryClient.invalidateQueries({ queryKey: ["chats"] });
-      })
-      .catch((error) => {
-        console.error("Error marking messages as read:", error);
-      });
+    // Mark messages as read in the database (the mutation hook will refetch chats on success)
+    markAsRead(conversationId);
   };
 
   // ─── Socket Listeners ─────────────────────────────────────────────────────────
@@ -119,12 +87,17 @@ export default function Chat() {
     if (!socket) return;
 
     // Listen for incoming messages from other users
-    const handleReceiveMessage = (data: MessageType) => { // this data is passed from the sever when it emits "receive_message" event
+    const handleReceiveMessage = (data: MessageType) => {
+      // this data is passed from the sever when it emits "receive_message" event
+
       // Only refetch if the message is for the current chat
-      if (data.conversationId === parseInt(chatId!)) {  // if the incoming message is for the conversation the client is already looking at
+      if (data.conversationId === parseInt(chatId!)) {
+        // if the incoming message is for the conversation the client is already looking at
         queryClient.invalidateQueries({ queryKey: ["messages", chatId] }); // tells tanstack query to refetch the data so it the receiver sees it without needing to refresh
+        // Mark this message as read immediately since user is viewing the chat
+        markAsRead(data.conversationId);
       } else {
-        // If message is from a different chat, refetch chats list to update unread count
+        // If message is from a different chat, refetch chats list to update unread count badge
         queryClient.invalidateQueries({ queryKey: ["chats"] });
       }
     };
@@ -133,8 +106,9 @@ export default function Chat() {
     // If the invalidateQuery logic was simply put in the handleSendMessage function, if the server is down and the client sends a message, it would show up on the chat, then disappear after a refresh (server was down and message never made it to DB)
     // By having the server emit a message_sent event back to the sender, it ensures the sender only sees their sent message appear in the chat if it actually got sent
     const handleMessageSent = () => {
-      // Refetch messages to show the sent message immediately, snsures the sender sees their message pop up in the chat
+      // Refetch messages to show the sent message immediately, ensures the sender sees their message pop up in the chat
       queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
+      queryClient.invalidateQueries({ queryKey: ["chats"] });
     };
 
     socket.on("receive_message", handleReceiveMessage);
@@ -145,7 +119,7 @@ export default function Chat() {
       socket.off("receive_message", handleReceiveMessage);
       socket.off("message_sent", handleMessageSent);
     };
-  }, [socket, chatId, queryClient]);
+  }, [socket, chatId, queryClient, markAsRead]);
 
   const closeNewChat = () => {
     setNewChatOpen(false);
@@ -179,7 +153,8 @@ export default function Chat() {
   // emits send_message event to server and clears input
   const handleSendMessage = () => {
     if (!messageInput.trim() || !selectedChat || !socket || !chatId) return;
-    socket.emit("send_message", { // doesn't pass sender id (client id) as can be obtained on server side
+    socket.emit("send_message", {
+      // doesn't pass sender id (client id) as can be obtained on server side
       conversationId: parseInt(chatId),
       recipientId: selectedChat.id,
       content: messageInput,
@@ -249,7 +224,7 @@ export default function Chat() {
             {filteredChats?.map((chat) => (
               <ListItemButton
                 key={chat.conversation_id}
-                selected={selectedChat?.id === chat.conversation_id}
+                selected={selectedChat?.conversation_id === chat.conversation_id}
                 onClick={() => handleChatSelection(chat.conversation_id)}
                 sx={{
                   px: 1.75,
@@ -401,7 +376,9 @@ export default function Chat() {
                 <Typography
                   sx={{
                     fontSize: "12px",
-                    color: onlineUsers.includes(selectedChat.id) ? "#4ade80" : "#a0a09b",
+                    color: onlineUsers.includes(selectedChat.id)
+                      ? "#4ade80"
+                      : "#a0a09b",
                   }}
                 >
                   {onlineUsers.includes(selectedChat.id) ? "online" : "offline"}
@@ -503,7 +480,7 @@ export default function Chat() {
                   }}
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
-                  placeholder={`{Message} ${selectedChat.username}…`}
+                  placeholder={`Message ${selectedChat.username}…`}
                   fullWidth
                   sx={{ fontSize: "13.5px", "& input": { py: "10px" } }}
                 />
