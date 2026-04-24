@@ -24,17 +24,14 @@ io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId; // userId of client, passed by client in SocketContext
 
   userSocketMap[userId] = socket.id; // add user id : socket id mapping
+  
+  socket.broadcast.emit("user_online", { userId: parseInt(userId) }); // Broadcast to everyone that this user is now online
 
-  // Broadcast to everyone that this user is now online
-  socket.broadcast.emit("user_online", { userId: parseInt(userId) });
-
-  // Send the current online users list to the newly connected user
-  socket.emit("online_users", Object.keys(userSocketMap).map(Number));
+  socket.emit("online_users", Object.keys(userSocketMap).map(Number)); // Send the current online users list to the newly connected user
 
   socket.on("disconnect", () => {
-    delete userSocketMap[userId];
-    // Broadcast to everyone that this user went offline
-    io.emit("user_offline", { userId: parseInt(userId) });
+    delete userSocketMap[userId]; // Remove userId from mapping
+    io.emit("user_offline", { userId: parseInt(userId) }); // Broadcast to everyone that this user went offline
   });
 
   socket.on("send_message", async ({ conversationId, recipientId, content }) => {
@@ -102,13 +99,12 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(cookieParser());
+app.use(express.json());
+app.use("/api", routes);
 
 app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
-
-app.use(express.json());
-app.use("/api", routes);
 
 httpServer.listen(PORT, () => {
   console.log(`Server is alive at http://localhost:${PORT}`);
