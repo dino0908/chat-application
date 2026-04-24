@@ -48,37 +48,31 @@ import UserAvatar from "../components/UserAvatar";
 export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null); // used to scroll down the chat automatically on every message sent / received
   const { socket, onlineUsers } = useSocket();
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient(); // used below to invalidate queries (clear cache and refresh)
   const { data: suggestedUsers } = useUsers(); // list of users that show when client tries to start a new conversation
   const { data: allChats } = useChats(); // allChats is all the chats that the client is in. (not all the chats in the entire DB)
-  const { mutate: markAsRead } = useMarkAsRead();
+  const { mutate: markAsRead } = useMarkAsRead(); // call markAsRead later and pass in conversationID
   const { user } = useAuthStore(); // client's own user object
   const { chatId } = useParams<{ chatId: string }>(); // conversation id, aka the "room" id taken from URL
-  const { data: messages } = useMessages(chatId); // get chat messages between client and selectedChat
+  const { data: messages } = useMessages(chatId); // get chat messages between client and selectedChat, uses chatId from URL params as argument
   const navigate = useNavigate();
 
   // if URL is /chat with no params, selectedChat is null. otherwise, selectedChat is the chat in allChats where the conversation_id matches the id in URL params
   // this is so we know who's chat to display on the right hand side, if there is a selectedChat, display on the RHS. if not RHS shows "click on chat to start messaging"
   // any changes to chatId (by changing the URL /chat/<chatId> either manually or through navigation), will update this selectedChat, which updates the RHS
-  const selectedChat = chatId
-    ? allChats?.find((c) => c.conversation_id === parseInt(chatId)) || null
-    : null;
-
+  const selectedChat = chatId ? allChats?.find((c) => c.conversation_id === parseInt(chatId)) || null : null;
   const [searchQuery, setSearchQuery] = useState("");
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatSearch, setNewChatSearch] = useState("");
   const [messageInput, setMessageInput] = useState("");
 
   useEffect(() => {
-    // used to scroll down the chat automatically on every message sent / received
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); // used to scroll down the chat automatically on every message sent / received
   }, [messages]);
 
   const handleChatSelection = (conversationId: number) => {
     navigate(`/chat/${conversationId}`); // navigate to the chat
-
-    // Mark messages as read in the database (the mutation hook will refetch chats on success)
-    markAsRead(conversationId);
+    markAsRead(conversationId); // Mark messages as read in the database (the mutation hook will refetch chats on success)
   };
 
   // ─── Socket Listeners ─────────────────────────────────────────────────────────
@@ -86,18 +80,12 @@ export default function Chat() {
     if (!socket) return;
 
     // Listen for incoming messages from other users
-    const handleReceiveMessage = (data: MessageType) => {
-      // this data is passed from the sever when it emits "receive_message" event
-
-      // Only refetch if the message is for the current chat
-      if (data.conversationId === parseInt(chatId!)) {
-        // if the incoming message is for the conversation the client is already looking at
-        queryClient.invalidateQueries({ queryKey: ["messages", chatId] }); // tells tanstack query to refetch the data so it the receiver sees it without needing to refresh
-        // Mark this message as read immediately since user is viewing the chat
-        markAsRead(data.conversationId);
-      } else {
-        // If message is from a different chat, refetch chats list to update unread count badge
-        queryClient.invalidateQueries({ queryKey: ["chats"] });
+    const handleReceiveMessage = (data: MessageType) => { // this data is passed from the sever when it emits "receive_message" event
+      if (data.conversationId === parseInt(chatId!)) { // if the incoming message is for the conversation the client is already looking at
+        queryClient.invalidateQueries({ queryKey: ["messages", chatId] }); // tells tanstack query to refetch the messages so it the receiver sees it without needing to refresh
+        markAsRead(data.conversationId); // Mark this message as read immediately since user is viewing the chat
+      } else { // If message is from a different chat,
+        queryClient.invalidateQueries({ queryKey: ["chats"] });  // Refetch chats list to update unread count badge and chat message preview in the chat list
       }
     };
 
@@ -105,9 +93,8 @@ export default function Chat() {
     // If the invalidateQuery logic was simply put in the handleSendMessage function, if the server is down and the client sends a message, it would show up on the chat, then disappear after a refresh (server was down and message never made it to DB)
     // By having the server emit a message_sent event back to the sender, it ensures the sender only sees their sent message appear in the chat if it actually got sent
     const handleMessageSent = () => {
-      // Refetch messages to show the sent message immediately, ensures the sender sees their message pop up in the chat
-      queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
-      queryClient.invalidateQueries({ queryKey: ["chats"] });
+      queryClient.invalidateQueries({ queryKey: ["messages", chatId] }); // Refetch messages to show the sent message immediately, ensures the sender sees their message pop up in the chat
+      queryClient.invalidateQueries({ queryKey: ["chats"] }); // Refetch chat list so the chat message preview shows in the chat list
     };
 
     socket.on("receive_message", handleReceiveMessage);
@@ -125,7 +112,7 @@ export default function Chat() {
     setNewChatSearch("");
   };
 
-  const handleStartConversation = async (recipientId: number) => {
+  const handleStartConversation = async (recipientId: number) => { // starting a new conversation
     try {
       const { conversation_id } = await startConversation(recipientId); // serverside: creates a new conversation_id in the backend and adds the id of both users to it
       closeNewChat();
@@ -153,7 +140,7 @@ export default function Chat() {
   const handleSendMessage = () => {
     if (!messageInput.trim() || !selectedChat || !socket || !chatId) return;
     socket.emit("send_message", {
-      // doesn't pass sender id (client id) as can be obtained on server side
+      // doesn't pass sender id (client id) as can be obtained on server side. server gets userid from socket
       conversationId: parseInt(chatId),
       recipientId: selectedChat.id,
       content: messageInput,

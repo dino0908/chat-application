@@ -39,7 +39,6 @@ io.on("connection", (socket) => {
 
   socket.on("send_message", async ({ conversationId, recipientId, content }) => {
     try {
-      console.log("send message event received by server", conversationId, recipientId, content)
       // Save message to database
       const result = await pool.query(
         `INSERT INTO messages (conversation_id, sender_id, message_text, is_read, created_at)

@@ -33,9 +33,8 @@ export const useMarkAsRead = () => {
 
   return useMutation({
     mutationFn: markMessagesAsRead,
-    // After the server successfully updates, tell the list to refresh
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["chats"] });
+      queryClient.invalidateQueries({ queryKey: ["chats"] }); // After the server successfully updates, tell the list to refresh
     },
   });
 };
