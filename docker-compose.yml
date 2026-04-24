@@ -2,11 +2,12 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: chatapp
+      POSTGRES_USER: postgres # has to match value in server/.env
+      POSTGRES_PASSWORD: password # has to match value in server/.env
+      POSTGRES_DB: chatapp # has to match value in server/.env
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./server/src/config/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
 
