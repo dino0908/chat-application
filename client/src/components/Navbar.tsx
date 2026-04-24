@@ -9,16 +9,19 @@ function Navbar() {
   const { logout } = useAuthStore();
   const navigate = useNavigate();
 
-  const handleRedirect = (label: any) => {
-    if (label == "Settings") {
-      navigate("/settings");
-    } else if (label == "Profile") {
-      navigate("/profile");
-    } else if (label == "Log out") {
+  const handleRedirect = (label: string) => {
+  switch (label) {
+    case "Settings":
+      return navigate("/settings");
+    case "Profile":
+      return navigate("/profile");
+    case "Log out":
       logout();
-      navigate("/");
-    }
-  };
+      return navigate("/");
+    default:
+      return;
+  }
+};
 
   return (
     <AppBar position="static" elevation={0}>

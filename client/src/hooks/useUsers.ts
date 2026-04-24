@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import type { UserType } from "../types/UserTypes";
 
-const fetchUsers = async () => {
-  const { data } = await axios.get("http://localhost:5000/api/users");
+const fetchUsers = async (): Promise<UserType[]> => {
+  const { data } = await axios.get<{ data: UserType[] }>("http://localhost:5000/api/users");
   return data.data; // Returning the 'data' array from JSON response
 };
 

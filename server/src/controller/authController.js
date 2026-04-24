@@ -1,6 +1,7 @@
 import pool from "../config/db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { registerSchema } from "../schema/authSchema.ts"
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
@@ -27,7 +28,7 @@ export const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username, email: user.email },
+      { id: user.id, username: user.username, email: user.email, created_at: user.created_at },
       process.env.JWT_SECRET_KEY,
       { expiresIn: "7d" },
     );
@@ -45,6 +46,7 @@ export const login = async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
+        created_at: user.created_at
       },
     });
   } catch (error) {
@@ -54,7 +56,17 @@ export const login = async (req, res) => {
 };
 
 export const register = async (req, res) => {
-  const { username, email, password } = req.body;
+  
+  const result = registerSchema.safeParse(req.body)
+
+  if (!result.success) {
+    return res.status(400).json({ 
+      message: "Invalid input", 
+      errors: result.error.format() 
+    });
+  }
+
+  const { username, email, password } = result.data;
 
   try {
     // 1. Check if user already exists
@@ -125,6 +137,7 @@ export const verifyJWT = async (req, res) => {
       id: verified.id,
       username: verified.username,
       email: verified.email,
+      created_at: verified.created_at
     });
   } catch (err) {
     res.status(401).json({ isLoggedIn: false });
@@ -173,7 +186,6 @@ export const getChats = async (req, res) => {
     c.id AS conversation_id,
     u.id AS id,
     u.username AS username,
-    u.is_online AS online,
     lm.message_text AS "lastMessage",
     lm.created_at AS time,
     (
@@ -215,8 +227,8 @@ ORDER BY lm.created_at DESC;`;
 
 
 export const getMessages = async (req, res) => {
-  const { chatId } = req.params;
-  const userId = req.user.id; // From verifyToken middleware
+  const { chatId } = req.params; // id of person client is talking to
+  const userId = req.user.id; // id of client, obtained from verifyToken middleware
 
   const query = `
     SELECT 
@@ -234,5 +246,94 @@ export const getMessages = async (req, res) => {
     res.status(200).json({ success: true, data: result.rows });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error fetching messages" });
+  }
+};
+
+// Start a new conversation with a user (or return existing one)
+export const startConversation = async (req, res) => {
+  const { recipientId } = req.body; // The user we want to chat with
+  const userId = req.user.id; // Current user from verifyToken middleware
+
+  if (!recipientId) {
+    return res.status(400).json({ success: false, message: "recipientId is required" });
+  }
+
+  if (userId === recipientId) {
+    return res.status(400).json({ success: false, message: "Cannot create conversation with yourself" });
+  }
+
+  try {
+    // Check if conversation already exists
+    const existingConversation = await pool.query(
+      `SELECT c.id 
+       FROM conversations c
+       JOIN conversation_participants cp1 ON c.id = cp1.conversation_id AND cp1.user_id = $1
+       JOIN conversation_participants cp2 ON c.id = cp2.conversation_id AND cp2.user_id = $2
+       LIMIT 1`,
+      [userId, recipientId]
+    );
+
+    if (existingConversation.rows.length > 0) {
+      // Conversation exists, return it
+      return res.status(200).json({
+        success: true,
+        data: { conversation_id: existingConversation.rows[0].id }
+      });
+    }
+
+    // Create new conversation
+    const newConversation = await pool.query(
+      `INSERT INTO conversations (created_at) 
+       VALUES (NOW()) 
+       RETURNING id`
+    );
+
+    const conversationId = newConversation.rows[0].id;
+
+    // Add both participants
+    await pool.query(
+      `INSERT INTO conversation_participants (conversation_id, user_id) 
+       VALUES ($1, $2), ($1, $3)`,
+      [conversationId, userId, recipientId]
+    );
+
+    res.status(201).json({
+      success: true,
+      data: { conversation_id: conversationId }
+    });
+  } catch (error) {
+    console.error("Error starting conversation:", error);
+    res.status(500).json({ success: false, message: "Error starting conversation" });
+  }
+};
+
+// Mark all unread messages in a conversation as read
+export const markMessagesAsRead = async (req, res) => {
+  const { conversationId } = req.body;
+  const userId = req.user.id;
+
+  if (!conversationId) {
+    return res.status(400).json({ success: false, message: "conversationId is required" });
+  }
+
+  try {
+    // Update all unread messages from other users in this conversation
+    const result = await pool.query(
+      `UPDATE messages 
+       SET is_read = true 
+       WHERE conversation_id = $1 
+         AND sender_id != $2 
+         AND is_read = false
+       RETURNING id`,
+      [conversationId, userId]
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Marked ${result.rowCount} messages as read`
+    });
+  } catch (error) {
+    console.error("Error marking messages as read:", error);
+    res.status(500).json({ success: false, message: "Error marking messages as read" });
   }
 };

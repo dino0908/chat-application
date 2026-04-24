@@ -10,6 +10,7 @@ import { useMutation } from "@tanstack/react-query";
 import { loginUser, registerUser } from "../api/auth";
 import { useNavigate } from "react-router";
 import { useAuthStore } from "../store/useAuthStore";
+import { type UserType } from "../types/UserTypes";
 
 import {
   Box,
@@ -24,6 +25,7 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
+import { connectSocket } from "../utils/socket";
 
 function Landing() {
   const setAuth = useAuthStore((state) => state.setAuth)
@@ -51,16 +53,17 @@ function Landing() {
     mode: "onSubmit",
   });
 
+
   const loginMutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (data) => {
-      console.log("Success!", data);
+      console.log("Login success", data)
       setAuth(data.user);
+      connectSocket(data.user.id); // connect to socket on serverside
       navigate("/chat");
     },
     onError: (error: Error) => {
       console.error("Login Error:", error.message);
-      // logic to display snackbar
       setErrorMessage(error.message);
       setOpenSnackbar(true);
     },
