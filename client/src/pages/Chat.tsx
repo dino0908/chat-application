@@ -123,6 +123,9 @@ export default function Chat() {
       // Only refetch if the message is for the current chat
       if (data.conversationId === parseInt(chatId!)) {  // if the incoming message is for the conversation the client is already looking at
         queryClient.invalidateQueries({ queryKey: ["messages", chatId] }); // tells tanstack query to refetch the data so it the receiver sees it without needing to refresh
+      } else {
+        // If message is from a different chat, refetch chats list to update unread count
+        queryClient.invalidateQueries({ queryKey: ["chats"] });
       }
     };
 
