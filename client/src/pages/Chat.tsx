@@ -42,7 +42,6 @@ import { useMessages } from "../hooks/useMessages";
 import { avatarColor, initials } from "../utils/helperFunctions";
 import { useSocket } from "../context/SocketContext";
 import { startConversation } from "../api/chat";
-import type { ChatType } from "../types/ChatTypes";
 import type { MessageType } from "../types/MessageTypes";
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
@@ -143,7 +142,7 @@ export default function Chat() {
   );
 
   // displays the chats where the username matches the searchquery, for finding users to start a new conversation with
-  const filteredUsers = (suggestedUsers || []).filter(
+  const filteredUsers = suggestedUsers?.filter(
     (u) =>
       newChatSearch.length > 0 &&
       u.username.toLowerCase().includes(newChatSearch.toLowerCase()) &&
@@ -576,7 +575,7 @@ export default function Chat() {
               >
                 Start typing to find users
               </Typography>
-            ) : filteredUsers.length === 0 ? (
+            ) : filteredUsers?.length === 0 ? (
               <Typography
                 sx={{
                   color: "#a0a09b",
@@ -589,7 +588,7 @@ export default function Chat() {
               </Typography>
             ) : (
               <List disablePadding>
-                {filteredUsers.map((user) => (
+                {filteredUsers?.map((user) => (
                   <ListItem key={user.id} disablePadding>
                     <ListItemButton
                       onClick={() => handleStartConversation(user.id)}
