@@ -1,11 +1,12 @@
 import { type AuthFormType } from "../schema/authSchema";
 import { type AuthResponse } from "../types/AuthTypes";
 import axios from "axios";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 export const loginUser = async (data: AuthFormType): Promise<AuthResponse> => {
   try {
     const response = await axios.post<AuthResponse>(
-      "http://localhost:5000/api/login",
+      `${API_BASE_URL}/api/login`,
       data,
       {
         withCredentials: true,
@@ -32,7 +33,7 @@ export const loginUser = async (data: AuthFormType): Promise<AuthResponse> => {
 export const registerUser = async (data: AuthFormType): Promise<AuthResponse> => {
   try {
     const response = await axios.post<AuthResponse>(
-      "http://localhost:5000/api/register",
+      `${API_BASE_URL}/api/register`,
       data,
       {
         withCredentials: true,

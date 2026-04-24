@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../store/useAuthStore';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 interface SocketContextType {
   socket: Socket | null;
@@ -20,7 +21,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user?.id) return; // Don't connect until user is authenticated
 
     // Initialize connection (one instance for the entire app)
-    const newSocket = io('http://localhost:5000', {
+    const newSocket = io(`${API_BASE_URL}`, {
       query: { userId: user.id },
       withCredentials: true,
       autoConnect: true,
