@@ -33,7 +33,6 @@ import Navbar from "../components/Navbar";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchBox from "../components/SearchBox";
-import OnlineBadge from "../components/OnlineBadge";
 import { useAuthStore } from "../store/useAuthStore";
 import { useUsers } from "../hooks/useUsers";
 import { useChats, useMarkAsRead } from "../hooks/useChats";
@@ -43,6 +42,7 @@ import { avatarColor, initials } from "../utils/helperFunctions";
 import { useSocket } from "../context/SocketContext";
 import { startConversation } from "../api/chat";
 import type { MessageType } from "../types/MessageTypes";
+import UserAvatar from "../components/UserAvatar";
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
@@ -237,19 +237,7 @@ export default function Chat() {
                 }}
               >
                 <ListItemAvatar sx={{ minWidth: "auto" }}>
-                  <OnlineBadge online={onlineUsers.includes(chat.id)}>
-                    <Avatar
-                      sx={{
-                        width: 36,
-                        height: 36,
-                        bgcolor: avatarColor(chat.username),
-                        fontSize: "13px",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {initials(chat.username)}
-                    </Avatar>
-                  </OnlineBadge>
+                  <UserAvatar chat={chat} onlineUsers={onlineUsers} />
                 </ListItemAvatar>
 
                 <ListItemText
@@ -353,19 +341,7 @@ export default function Chat() {
                 flexShrink: 0,
               }}
             >
-              <OnlineBadge online={onlineUsers.includes(selectedChat.id)}>
-                <Avatar
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    bgcolor: avatarColor(selectedChat?.username),
-                    fontSize: "13px",
-                    fontWeight: 600,
-                  }}
-                >
-                  {initials(selectedChat.username)}
-                </Avatar>
-              </OnlineBadge>
+              <UserAvatar chat={selectedChat} onlineUsers={onlineUsers} />
               <Box>
                 <Typography
                   sx={{ fontWeight: 500, fontSize: "14px", color: "#1a1a18" }}
