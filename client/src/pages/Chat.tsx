@@ -47,7 +47,7 @@ import UserAvatar from "../components/UserAvatar";
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null); // used to scroll down the chat automatically on every message sent / received
-  const { socket, onlineUsers } = useSocket();
+  const { socket, onlineUsers, isConnected } = useSocket();
   const queryClient = useQueryClient(); // used below to invalidate queries (clear cache and refresh)
   const { data: suggestedUsers } = useUsers(); // list of users that show when client tries to start a new conversation
   const { data: allChats } = useChats(); // allChats is all the chats that the client is in. (not all the chats in the entire DB)
@@ -65,6 +65,12 @@ export default function Chat() {
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatSearch, setNewChatSearch] = useState("");
   const [messageInput, setMessageInput] = useState("");
+
+  useEffect(() => { // fixes the issue of unread messages and previews not showing in the chat list, if received when the recipient was offline
+    if (isConnected) { 
+      queryClient.invalidateQueries({ queryKey: ["chats"] }) 
+    }
+  }, [isConnected, queryClient]) // after a user logs in, their socket connection is established. isConnected is set to true. this useEffect triggers to update the chat list immediately, showing messages received when the user was offline
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); // used to scroll down the chat automatically on every message sent / received
