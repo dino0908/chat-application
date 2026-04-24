@@ -24,3 +24,18 @@ export const formatMessageTime = (dateString: string) => {
     return "";
   }
 };
+
+// Date format ---> DD Month YYYY, for "Member since" on profile page
+export const formatFullDate = (dateString: string) => {
+  if (!dateString) return "";
+  try {
+    const date = parseISO(dateString);
+    return format(date, 'd MMMM yyyy');
+  } catch (error) {
+    try {
+      return format(new Date(dateString), 'd MMMM yyyy');
+    } catch {
+      return "";
+    }
+  }
+};

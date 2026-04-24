@@ -67,8 +67,8 @@ export default function Chat() {
   const [messageInput, setMessageInput] = useState("");
 
   useEffect(() => { // fixes the issue of unread messages and previews not showing in the chat list, if received when the recipient was offline
-    if (isConnected) { 
-      queryClient.invalidateQueries({ queryKey: ["chats"] }) 
+    if (isConnected) {
+      queryClient.invalidateQueries({ queryKey: ["chats"] })
     }
   }, [isConnected, queryClient]) // after a user logs in, their socket connection is established. isConnected is set to true. this useEffect triggers to update the chat list immediately, showing messages received when the user was offline
 

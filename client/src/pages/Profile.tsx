@@ -2,7 +2,7 @@ import { Box, Typography, Avatar, Divider } from "@mui/material";
 import Navbar from "../components/Navbar";
 import { useAuthStore } from "../store/useAuthStore";
 import { avatarColor, initials } from "../utils/helperFunctions";
-import { formatMessageTime } from "../utils/dateFormatter";
+import { formatFullDate } from "../utils/dateFormatter";
 
 function Profile() {
   const { user } = useAuthStore();
@@ -134,7 +134,7 @@ function Profile() {
                 }}
               >
                 {user?.created_at
-                  ? formatMessageTime(user.created_at)
+                  ? formatFullDate(user.created_at)
                   : "Unknown"}
               </Typography>
             </Box>

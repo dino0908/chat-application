@@ -28,7 +28,7 @@ export const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username, email: user.email },
+      { id: user.id, username: user.username, email: user.email, created_at: user.created_at },
       process.env.JWT_SECRET_KEY,
       { expiresIn: "7d" },
     );
@@ -46,6 +46,7 @@ export const login = async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
+        created_at: user.created_at
       },
     });
   } catch (error) {
@@ -136,6 +137,7 @@ export const verifyJWT = async (req, res) => {
       id: verified.id,
       username: verified.username,
       email: verified.email,
+      created_at: verified.created_at
     });
   } catch (err) {
     res.status(401).json({ isLoggedIn: false });
