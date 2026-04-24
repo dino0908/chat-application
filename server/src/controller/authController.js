@@ -35,8 +35,8 @@ export const login = async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true, // Prevents JS access (XSS protection)
-      //   secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in prod
-      sameSite: "strict", // CSRF protection
+      secure: true, // MUST be true for cross-site cookies. Added for deployment
+      sameSite: "none", // CSRF protection strict/none - "none for deployment where frontend and backend have different domain"
       maxAge: 3600000,
     });
 
